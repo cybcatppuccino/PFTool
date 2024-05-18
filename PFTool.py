@@ -169,6 +169,10 @@ class PFO:
                "t-form = " + str(self.tform).replace("**", "^") + "\n" + \
                "local index = " + str(self.localind).replace("**", "^") + "\n" + \
                "discriminant = " + str(self.discriminant).replace("**", "^")
+    
+    # Now we are ready to solve the PFeqn. Holomorphic solutions first.
+    # Then it's time to find all solutions at the MUM point.
+    # Also we want to compute the transition matrices between different points numerically. 
         
 if __name__ == "__main__":
     # op = PFO(TEST_PFO)
