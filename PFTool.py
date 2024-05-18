@@ -134,6 +134,9 @@ class PFO:
         # Discriminant
         self.discriminant = sympy.factor(self.primtform.coeff(t, self.deg))
         
+        # Local Exponents (Not calculated at first)
+        self.localexp = None
+        
         if pr:
             print("Operator Constructed!")
     
@@ -148,7 +151,7 @@ class PFO:
         return PFO(to_inv(self.dform, self.deg), pr=self.pr)
     
     # Try to make a list of the special points
-    def localexp(self):
+    def calclocalexp(self):
         outlst = []
         s = sympy.solve(self.discriminant, z, cubics=True, quartics=True, quintics=True)
         for root in s:
@@ -157,6 +160,7 @@ class PFO:
         outlst.append((0, self, sympy.roots(self.localind, t)))
         op = self.translation_inf()
         outlst.append((sympy.zoo, op, sympy.roots(op.localind, t)))
+        self.localexp = outlst
         return outlst
     
     def __str__(self):
@@ -171,7 +175,7 @@ if __name__ == "__main__":
     # print(op.localexp())
     op2 = PFO(TEST_LIST22)
     print(op2)
-    print(op2.localexp())
+    print(op2.calclocalexp())
     '''
     op2 = PFO(LEG)
     print(op2)
