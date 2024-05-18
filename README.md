@@ -5,4 +5,3 @@
  We defined our data structure(class `PFO`) for a PF operator. 
  In our database, there is a local version of the famous [AESZ database](https://cydb.mathematik.uni-mainz.de/), 
  which contains only [Calabi-Yau](https://en.wikipedia.org/wiki/Calabi%E2%80%93Yau_manifold) operators. 
- 
