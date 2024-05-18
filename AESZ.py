@@ -17,7 +17,8 @@ def get_info_from_num(num):
     num2 = num
     while instr[num2] != ']':
         num2 += 1
-    outlst.append(eval(instr[num:num2 + 1].replace("^", "**").replace("\/", "/")))
+    lst = instr[num + 1: num2].replace("X", "t").replace("^", "**").replace("\/", "/").split(',')
+    outlst.append([sympy.simplify(term, evaluate=False, rational=True) for term in lst])
     
     num = instr.find('New Number:') + 11
     num2 = num
@@ -110,4 +111,4 @@ def print_all_AESZ():
     f.close()
         
 if __name__ == '__main__':
-    a = AESZ(1)
+    a = AESZ(5)
