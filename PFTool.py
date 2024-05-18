@@ -1,3 +1,9 @@
+'''
+Picard-Fuchs Operator Tool by cybcat
+
+We only deal with PF Operator in polynomial of z, d = d/dz and t = z * d/dz.
+'''
+
 import sympy
 
 # The Symbols
@@ -12,7 +18,7 @@ d = sympy.Symbol('d')
 t = sympy.Symbol('t')
 
 DEG_BOUND = 15
-TEST_PFO = (t ** 4) - 5 * z * (5 * t + 1) * (5 * t + 2) * (5 * t + 3) * (5 * t + 4)
+TEST_PFO = (5 ** 5) * (t ** 4) - 5 * z * (5 * t + 1) * (5 * t + 2) * (5 * t + 3) * (5 * t + 4)
 
 # Generate a list of power of t in d-poly form
 def t_power_to_d_list(n):
@@ -20,6 +26,8 @@ def t_power_to_d_list(n):
     for _ in range(n):
         lst.append(sympy.expand((lst[-1] * d + sympy.diff(lst[-1], z)) * z))
     return lst
+
+# Generate a list of power of d in t-poly form
 def d_power_to_t_list(n):
     lst = [1]
     for _ in range(n):
@@ -48,16 +56,55 @@ def to_t_form(ineqn):
         outeqn += ineqn.coeff(d, deg) * lst[deg]
     return sympy.expand(outeqn)
 
+
+def to_primitive(ineqn, var, deg):
+    ineqn = sympy.expand(ineqn * (z ** DEG_BOUND))
+    gcd = ineqn.coeff(var, 0)
+    for num in range(1, deg + 1):
+        gcd = sympy.gcd(gcd, ineqn.coeff(var, num))
+    return sympy.expand(sympy.cancel(ineqn / gcd))
+
+# The Picard Fuchs Operator Class
 class PFO:
-    def __init__(self, ineqn):
+    def __init__(self, ineqn, pr=False):
+        self.pr = pr
+        if pr:
+            print("Constructing Operator...")
+        
+        # Standard Forms
         self.dform = to_d_form(ineqn)
         self.tform = to_t_form(ineqn)
+        
+        # Degree
         self.deg = DEG_BOUND
         while (self.dform.coeff(d, self.deg) == 0):
             self.deg -= 1
         
+        # Primitive Forms
+        self.primdform = to_primitive(self.dform, d, self.deg)
+        self.primtform = to_primitive(self.tform, t, self.deg)
+        
+        # Indicial Polynomial
+        poly = self.primtform.subs([(z, 0)])
+        self.indpoly = sympy.factor(sympy.cancel(poly / poly.coeff(t, self.deg)))
+        
+        if pr:
+            print("Operator Constructed!")
+    
+    def translation(self, z0):
+        return PFO(self.dform.subs([(z, z + z0)]), pr=self.pr)
+    
+    def __str__(self):
+        return "degree = " + str(self.deg) + "\n" + \
+               "dform = " + str(self.dform) + "\n" + \
+               "tform = " + str(self.tform) + "\n" + \
+               "indpoly = " + str(self.indpoly)
+        
 if __name__ == "__main__":
-    op = PFO(TEST_PFO)
-    print(op.dform)
-    print(op.tform)
-    print(op.deg)
+    op = PFO(TEST_PFO, pr=True)
+    op1 = op.translation(1)
+    print(op1)
+    opm1 = op.translation(-1)
+    print(opm1)
+    
+    
