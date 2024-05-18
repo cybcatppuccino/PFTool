@@ -25,6 +25,16 @@ DEG_BOUND = 15
 TEST_PFO = "(t ** 4) - z * (t + 1/5) * (t + 2/5) * (t + 3/5) * (t + 4/5)"
 LEG = "z * (z-1) * d^2 + (2*z - 1) * d + 1/4"
 
+
+# We introduce
+X = sympy.Symbol('t')
+# Because on AESZ List they have: 
+TEST_LIST = [X**4, 240+2560*X+9456*X**2+13792*X**3+5936*X**4, 
+1628160+13957120*X+33556480*X**2+21186560*X**3+2293760*X**4,
+-3422617600*X**4-12288000000*X**3-9065267200*X**2-2457600000*X-221184000,
+1048576000*(5*X+1)*(5*X+2)*(5*X+3)*(5*X+4)]
+
+
 # Generate a list of power of t in d-poly form
 def t_power_to_d_list(n):
     lst = [1]
@@ -92,8 +102,14 @@ class PFO:
             print("Constructing Operator...")
         
         # Considering String Input
+        eqn = ineqn
         if type(ineqn) == type("string"):
-            ineqn = sympy.sympify(ineqn, evaluate=False, rational=True, convert_xor=True)
+            eqn = sympy.sympify(ineqn, evaluate=False, rational=True, convert_xor=True)
+        elif type(ineqn) == type(["List", 114514]):
+            eqn = 0
+            for num in range(len(ineqn)):
+                eqn += ineqn[num] * (z ** num)
+        ineqn = sympy.expand(eqn)
         
         # Standard Forms
         self.dform = to_d_form(ineqn)
@@ -110,7 +126,10 @@ class PFO:
         
         # Indicial Polynomial
         poly = self.primtform.subs([(z, 0)])
-        self.indpoly = sympy.factor(sympy.cancel(poly / poly.coeff(t, self.deg)))
+        self.localind = sympy.factor(sympy.cancel(poly / poly.coeff(t, self.deg)))
+        
+        # Discriminant
+        self.discriminant = sympy.factor(self.primtform.coeff(t, self.deg))
         
         if pr:
             print("Operator Constructed!")
@@ -120,29 +139,38 @@ class PFO:
         if type(z0) == type("string"):
             z0 = sympy.sympify(z0, evaluate=False, rational=True, convert_xor=True)
         return PFO(self.dform.subs([(z, z + z0)]), pr=self.pr)
-    
-    def transfactor(self):
-        deltadform = self.dform.subs([(z, z + zdelta)])
-        return sympy.factor(to_primitive(to_t_form(deltadform), t, self.deg).subs([(z, 0)]))
         
     # Set z to (1 / z)
     def translation_inf(self):
         return PFO(to_inv(self.dform, self.deg), pr=self.pr)
     
+    # Try to make a list of the special points
+    def localexp(self):
+        outlst = []
+        s = sympy.solve(self.discriminant, z, cubics=True, quartics=True, quintics=True)
+        for root in s:
+            op = self.translation(root)
+            outlst.append((root, op, sympy.roots(op.localind, t)))
+        op = self.translation_inf()
+        outlst.append((sympy.zoo, op, sympy.roots(op.localind, t)))
+        return outlst
+    
     def __str__(self):
-        return "degree = " + str(self.deg) + "\n" + \
-               "dform = " + str(self.dform) + "\n" + \
-               "tform = " + str(self.tform) + "\n" + \
-               "indpoly = " + str(self.indpoly)
+        return "deg = " + str(self.deg) + "\n" + \
+               "dform = " + str(self.dform).replace("**", "^") + "\n" + \
+               "tform = " + str(self.tform).replace("**", "^") + "\n" + \
+               "localind = " + str(self.localind).replace("**", "^") + "\n" + \
+               "discriminant = " + str(self.discriminant).replace("**", "^")
         
 if __name__ == "__main__":
-    op = PFO(TEST_PFO, pr=True)
-    print(op.translation(1))
-    print("at inf: ")
-    print(op.translation_inf())
-    print("Factor = ", op.transfactor())
+    op = PFO(TEST_PFO)
+    print(op.localexp())
+    op2 = PFO(TEST_LIST)
+    print(op2.localexp())
+    '''
     op2 = PFO(LEG)
     print(op2)
-    print(op2.transfactor())
+    print(op2.discriminant())
+    '''
     
     
