@@ -23,6 +23,7 @@ zdelta = sympy.Symbol('zdelta')
 
 DEG_BOUND = 15
 TEST_PFO = "(t ** 4) - z * (t + 1/5) * (t + 2/5) * (t + 3/5) * (t + 4/5)"
+LEG = "z * (z-1) * d^2 + (2*z - 1) * d + 1/4"
 
 # Generate a list of power of t in d-poly form
 def t_power_to_d_list(n):
@@ -36,6 +37,13 @@ def d_power_to_t_list(n):
     lst = [1]
     for _ in range(n):
         lst.append(sympy.expand(lst[-1] * t / z + sympy.diff(lst[-1], z)))
+    return lst
+
+# Generate a list of power of d when changing variable from z to 1/z
+def d_power_inv_list(n):
+    lst = [1]
+    for _ in range(n):
+        lst.append(sympy.expand((lst[-1] * d + sympy.diff(lst[-1], z)) * (- z**2)))
     return lst
 
 def to_d_form(ineqn):
@@ -60,6 +68,14 @@ def to_t_form(ineqn):
         outeqn += ineqn.coeff(d, deg) * lst[deg]
     return sympy.expand(outeqn)
 
+# d form inverse when changing variable from z to 1/z
+def to_inv(ineqn, indeg):
+    ineqn = sympy.expand(ineqn)
+    lst = d_power_inv_list(indeg)
+    outeqn = 0
+    for deg in range(indeg + 1):
+        outeqn += ineqn.coeff(d, deg).subs([(z, 1/z)]) * lst[deg]
+    return sympy.expand(outeqn)
 
 def to_primitive(ineqn, var, deg):
     ineqn = sympy.expand(ineqn * (z ** DEG_BOUND))
@@ -111,7 +127,7 @@ class PFO:
         
     # Set z to (1 / z)
     def translation_inf(self):
-        pass
+        return PFO(to_inv(self.dform, self.deg), pr=self.pr)
     
     def __str__(self):
         return "degree = " + str(self.deg) + "\n" + \
@@ -122,6 +138,11 @@ class PFO:
 if __name__ == "__main__":
     op = PFO(TEST_PFO, pr=True)
     print(op.translation(1))
-    print(op.transfactor())
+    print("at inf: ")
+    print(op.translation_inf())
+    print("Factor = ", op.transfactor())
+    op2 = PFO(LEG)
+    print(op2)
+    print(op2.transfactor())
     
     
