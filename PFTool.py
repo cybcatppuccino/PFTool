@@ -164,10 +164,10 @@ class PFO:
         return outlst
     
     def __str__(self):
-        return "deg = " + str(self.deg) + "\n" + \
-               "dform = " + str(self.dform).replace("**", "^") + "\n" + \
-               "tform = " + str(self.tform).replace("**", "^") + "\n" + \
-               "localind = " + str(self.localind).replace("**", "^") + "\n" + \
+        return "degree = " + str(self.deg) + "\n" + \
+               "d-form = " + str(self.dform).replace("**", "^") + "\n" + \
+               "t-form = " + str(self.tform).replace("**", "^") + "\n" + \
+               "local index = " + str(self.localind).replace("**", "^") + "\n" + \
                "discriminant = " + str(self.discriminant).replace("**", "^")
         
 if __name__ == "__main__":

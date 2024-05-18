@@ -77,6 +77,16 @@ class AESZ:
         
         self.pfo = PFO(info[0])
         # self.pfo.calclocalexp()
+    
+    def __str__(self):
+        return  "number = " + str(self.num) + "\n" + \
+                "AESZ number = " + self.AESZnum + "\n" + \
+                "new num = " + self.newnum + "\n" + \
+                "superseeker = " + str(self.ss) + "\n" + \
+                "note = " + self.note + "\n" + \
+                "Yukawa coupling = " + str(self.yukawa) + "\n" + \
+                "q-coordinate = " + str(self.qcoord) + "\n" + \
+                str(self.pfo)
 
 AESZList = []
 def get_all_AESZ(a):
@@ -89,6 +99,15 @@ def get_all_AESZ(a):
 def load_all_AESZ():
     f = open("AESZpickle.pkl", "rb")
     return pickle.load(f)
-    
+
+def print_all_AESZ():
+    outstr = ""
+    AESZList = load_all_AESZ()
+    for term in AESZList:
+        outstr += str(term) + "\n\n"
+    f = open("AllAESZinfo.txt", 'w')
+    f.write(outstr)
+    f.close()
+        
 if __name__ == '__main__':
     a = AESZ(1)
