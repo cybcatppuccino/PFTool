@@ -28,11 +28,14 @@ LEG = "z * (z-1) * d^2 + (2*z - 1) * d + 1/4"
 
 # We introduce
 X = sympy.Symbol('t')
-# Because on AESZ List they have: 
-TEST_LIST = [X**4, 240+2560*X+9456*X**2+13792*X**3+5936*X**4, 
+# Because on AESZ List they have (e.g. AESZ300 and AESZ22): 
+TEST_LIST300 = [X**4, 240+2560*X+9456*X**2+13792*X**3+5936*X**4, 
 1628160+13957120*X+33556480*X**2+21186560*X**3+2293760*X**4,
 -3422617600*X**4-12288000000*X**3-9065267200*X**2-2457600000*X-221184000,
 1048576000*(5*X+1)*(5*X+2)*(5*X+3)*(5*X+4)]
+TEST_LIST22 = [49*X**4, -1085*X**4-2002*X**3-1638*X**2-637*X-98,
+-16105*X**4-68044*X**3-102261*X**2-66094*X-15736, 21000*X**4+68712*X**3+72568*X**2+30072*X+3808,
+-7440*X**4-20256*X**3-23024*X**2-12896*X-2944, 512*(X+1)**4]
 
 
 # Generate a list of power of t in d-poly form
@@ -151,6 +154,7 @@ class PFO:
         for root in s:
             op = self.translation(root)
             outlst.append((root, op, sympy.roots(op.localind, t)))
+        outlst.append((0, self, sympy.roots(self.localind, t)))
         op = self.translation_inf()
         outlst.append((sympy.zoo, op, sympy.roots(op.localind, t)))
         return outlst
@@ -163,9 +167,10 @@ class PFO:
                "discriminant = " + str(self.discriminant).replace("**", "^")
         
 if __name__ == "__main__":
-    op = PFO(TEST_PFO)
-    print(op.localexp())
-    op2 = PFO(TEST_LIST)
+    # op = PFO(TEST_PFO)
+    # print(op.localexp())
+    op2 = PFO(TEST_LIST22)
+    print(op2)
     print(op2.localexp())
     '''
     op2 = PFO(LEG)
