@@ -12,13 +12,17 @@ import sympy
 # d: the differential operator d/dz
 # t: the differential operator z * d/dz
 
+# zdelta: used when considering z to z+zdelta
+
 z = sympy.Symbol('z')
 lgz = sympy.Symbol('lgz')
 d = sympy.Symbol('d')
 t = sympy.Symbol('t')
 
+zdelta = sympy.Symbol('zdelta')
+
 DEG_BOUND = 15
-TEST_PFO = (5 ** 5) * (t ** 4) - 5 * z * (5 * t + 1) * (5 * t + 2) * (5 * t + 3) * (5 * t + 4)
+TEST_PFO = "(t ** 4) - z * (t + 1/5) * (t + 2/5) * (t + 3/5) * (t + 4/5)"
 
 # Generate a list of power of t in d-poly form
 def t_power_to_d_list(n):
@@ -71,6 +75,10 @@ class PFO:
         if pr:
             print("Constructing Operator...")
         
+        # Considering String Input
+        if type(ineqn) == type("string"):
+            ineqn = sympy.sympify(ineqn, evaluate=False, rational=True, convert_xor=True)
+        
         # Standard Forms
         self.dform = to_d_form(ineqn)
         self.tform = to_t_form(ineqn)
@@ -91,8 +99,19 @@ class PFO:
         if pr:
             print("Operator Constructed!")
     
+    # Set z to (z + z0)
     def translation(self, z0):
+        if type(z0) == type("string"):
+            z0 = sympy.sympify(z0, evaluate=False, rational=True, convert_xor=True)
         return PFO(self.dform.subs([(z, z + z0)]), pr=self.pr)
+    
+    def transfactor(self):
+        deltadform = self.dform.subs([(z, z + zdelta)])
+        return sympy.factor(to_primitive(to_t_form(deltadform), t, self.deg).subs([(z, 0)]))
+        
+    # Set z to (1 / z)
+    def translation_inf(self):
+        pass
     
     def __str__(self):
         return "degree = " + str(self.deg) + "\n" + \
@@ -102,9 +121,7 @@ class PFO:
         
 if __name__ == "__main__":
     op = PFO(TEST_PFO, pr=True)
-    op1 = op.translation(1)
-    print(op1)
-    opm1 = op.translation(-1)
-    print(opm1)
+    print(op.translation(1))
+    print(op.transfactor())
     
     
