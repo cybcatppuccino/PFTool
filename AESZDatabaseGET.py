@@ -11,7 +11,7 @@ rs = GETINFO.rs
 print(rs[0])
 
 for _ in range(len(rs)):
-    r = requests.get(rs[0])
+    r = requests.get(rs[_])
     file_name = '.\\info\\' + str(_ + 1) + '.txt'
     f = open(file_name, 'w')
     f.write(r.text)
