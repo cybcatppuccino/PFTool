@@ -301,6 +301,7 @@ class PFO:
     def isMUM(self):
         return sympy.expand(self.localind - t ** self.deg) == 0
     
+    # [q(x)=e^(log_sol/hol_sol), x(q)]
     def qcoord(self, termnum):
         def listdiv(inlst, num):
             fct = sympy.Integer(num)
@@ -309,6 +310,12 @@ class PFO:
             outlst = [0 for num in range(len(inlst1) - 1)]
             for num1 in range(len(inlst1) - 1):
                 for num2 in range(len(inlst1) - 1 - num1):
+                    outlst[num1 + num2] += inlst1[num1] * inlst2[num2]
+            return outlst
+        def mulcoeff2(inlst1, inlst2):
+            outlst = [0 for num in range(len(inlst1))]
+            for num1 in range(len(inlst1)):
+                for num2 in range(len(inlst1) - num1):
                     outlst[num1 + num2] += inlst1[num1] * inlst2[num2]
             return outlst
         if not self.isMUM():
@@ -325,17 +332,30 @@ class PFO:
                     logsol[num2] += mult[num2 - num]
             
             mult = logsol
-            outstr = [1] + [0 for num in range(termnum - 2)]
+            outlst = [1] + [0 for num in range(termnum - 2)]
             for num in range(1, termnum - 1):
                 for num2 in range(num, termnum - 1):
-                    outstr[num2] += mult[num2 - num]
+                    outlst[num2] += mult[num2 - num]
                 mult = listdiv(mult, num + 1)
                 mult = mulcoeff(mult, logsol)
-            return [0] + outstr
+            
+            negoutlst = listdiv(outlst[1:], -1)
+            mult = negoutlst
+            invoutlst = [1] + mult
+            for num in range(2, termnum):
+                mult = mulcoeff(mult, negoutlst)
+                for num2 in range(num, termnum - 1):
+                    invoutlst[num2] += mult[num2 - num]
+            
+            mult = invoutlst
+            outlst2 = [1]
+            for num in range(2, termnum):
+                mult = mulcoeff2(mult, invoutlst)
+                outlst2.append(mult[num - 1] / sympy.Integer(num))
+
+            return ([0] + outlst, [0] + outlst2)
         
 if __name__ == "__main__":
     op = PFO(TEST_PFO)
-    print(op)
-    print(op.all_sol(6))
     print(op.qcoord(6))
     

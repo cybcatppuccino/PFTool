@@ -114,5 +114,5 @@ if __name__ == '__main__':
     a = AESZ(465)
     ap = a.pfo
     print(a)
-    print(ap.all_sol(5))
-    print(ap.qcoord(6))
+    print(ap.all_sol(8))
+    print(ap.qcoord(8))
