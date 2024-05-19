@@ -5,6 +5,7 @@ We only deal with PF Operator in polynomial of z, d = d/dz and t = z * d/dz.
 '''
 
 import sympy
+import fractions
 
 # The Symbols
 # z: the variable of the ODE
@@ -356,6 +357,6 @@ class PFO:
             return ([0] + outlst, [0] + outlst2)
         
 if __name__ == "__main__":
-    op = PFO(TEST_PFO)
-    print(op.qcoord(6))
+    opr = PFO(TEST_PFO)
+    print(opr.qcoord(6))
     
