@@ -186,17 +186,19 @@ class PFO:
             outlst.append([c.coeff(z, num3) for num3 in range(num2 + 1)])
         return outlst
     
-    def find_holo_sol(self, inlst, termnum):
+    def hol_sol(self, inlst, termnum):
         plist = self.primtform_list()
         c = [0 for num in range(termnum)]
         outlst = []
         def mono_opr(deg, coeff):
             for num1 in range(self.deg + 1):
-                for num2 in range(len(plist[num1])):
-                    if deg + num2 < termnum:
-                        c[deg + num2] += coeff * plist[num1][num2] * (deg ** num1)
-                    else:
-                        break
+                cdn = coeff * (deg ** num1)
+                if cdn != 0:
+                    for num2 in range(len(plist[num1])):
+                        if deg + num2 < termnum:
+                            c[deg + num2] += plist[num1][num2] * cdn
+                        else:
+                            break
         for num in range(len(inlst)):
             if num < termnum:
                 outlst.append(inlst[num])
@@ -217,6 +219,59 @@ class PFO:
             outlst.append(newterm)
             mono_opr(num, newterm)
         return outlst
+    
+    def log_sol(self, inlst, termnum):
+        plist = self.primtform_list()
+        c = [0 for num in range(termnum)]
+        outlst = []
+        def mono_opr(deg, coeff):
+            for num1 in range(self.deg + 1):
+                cdn = coeff * (deg ** num1)
+                if cdn != 0:
+                    for num2 in range(len(plist[num1])):
+                        if deg + num2 < termnum:
+                            c[deg + num2] += plist[num1][num2] * cdn
+                        else:
+                            break
+        def log_mono_opr(deg, logdeg, coeff):
+            for num1 in range(self.deg + 1):
+                if (deg != 0) or (num1 >= logdeg):
+                    cdn = coeff * (deg ** (num1 - logdeg))
+                else:
+                    cdn = 0
+                for num2 in range(num1, num1-logdeg, -1):
+                    cdn *= num2
+                if cdn != 0:
+                    for num2 in range(len(plist[num1])):
+                        if deg + num2 < termnum:
+                            c[deg + num2] += cdn * plist[num1][num2]
+                        else:
+                            break
+        for num2 in range(len(inlst)):
+            for num in range(len(inlst[num2])):
+                if num < termnum:
+                    if num2 == 0:
+                        outlst.append(inlst[0][num])
+                    log_mono_opr(num, num2, inlst[num2][num])
+                else:
+                    break
+        for num in range(len(inlst[0]), termnum):
+            den = 0
+            for num1 in range(self.deg + 1):
+                den += plist[num1][0] * (num ** num1)
+            if den == 0:
+                raise Exception("div 0")
+            newterm = 0
+            if type(den) == type(1):
+                newterm = -c[num] * sympy.Rational(1, den)
+            else:
+                newterm = -c[num] / den
+            outlst.append(newterm)
+            mono_opr(num, newterm)
+        return outlst
+    
+    def all_sol(self, termnum):
+        pass
         
         
 if __name__ == "__main__":
@@ -225,6 +280,10 @@ if __name__ == "__main__":
     op2 = PFO(TEST_LIST22)
     print(op2)
     print(op2.calclocalexp())
+    print()
+    l = PFO(LEG)
+    print(l.hol_sol([1], 10))
+    print(l.log_sol([[0], l.hol_sol([1], 10)], 10))
     '''
     op2 = PFO(LEG)
     print(op2)
