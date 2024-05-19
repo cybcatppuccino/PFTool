@@ -316,12 +316,19 @@ class PFO:
         else:
             holsol = self.hol_sol([1], termnum - 1)
             logsol = self.log_sol([[0], holsol], termnum - 1)[1:]
+            
+            holsol = listdiv(holsol[1:], -1)
+            mult = logsol
+            for num in range(1, termnum - 1):
+                mult = mulcoeff(mult, holsol)
+                for num2 in range(num, termnum - 2):
+                    logsol[num2] += mult[num2 - num]
+            
             mult = logsol
             outstr = [1] + [0 for num in range(termnum - 2)]
             for num in range(1, termnum - 1):
                 for num2 in range(num, termnum - 1):
                     outstr[num2] += mult[num2 - num]
-                print(mult, outstr)
                 mult = listdiv(mult, num + 1)
                 mult = mulcoeff(mult, logsol)
             return [0] + outstr
@@ -330,11 +337,5 @@ if __name__ == "__main__":
     op = PFO(TEST_PFO)
     print(op)
     print(op.all_sol(6))
-    
-    print()
-    
-    op3=op.calclocalexp()[0][1]
-    print(op3)
-    print(op3.all_sol(6))
-    
+    print(op.qcoord(6))
     

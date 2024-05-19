@@ -111,5 +111,8 @@ def print_all_AESZ():
     f.close()
         
 if __name__ == '__main__':
-    a = AESZ(5)
+    a = AESZ(465)
     ap = a.pfo
+    print(a)
+    print(ap.all_sol(5))
+    print(ap.qcoord(6))
