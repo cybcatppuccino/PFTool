@@ -242,10 +242,10 @@ class PFO:
             for num1 in range(self.deg + 1):
                 if (deg != 0) or (num1 >= logdeg):
                     cdn = coeff * (deg ** (num1 - logdeg))
+                    for num2 in range(num1, num1-logdeg, -1):
+                        cdn *= num2
                 else:
                     cdn = 0
-                for num2 in range(num1, num1-logdeg, -1):
-                    cdn *= num2
                 if cdn != 0:
                     for num2 in range(len(plist[num1])):
                         if deg + num2 < termnum:
@@ -297,7 +297,34 @@ class PFO:
                 sollist.append(self.log_sol(initval, termnum))
             soldict[root] = sollist
         return soldict
-        
+    
+    def isMUM(self):
+        return sympy.expand(self.localind - t ** self.deg) == 0
+    
+    def qcoord(self, termnum):
+        def listdiv(inlst, num):
+            fct = sympy.Integer(num)
+            return [term / fct for term in inlst]
+        def mulcoeff(inlst1, inlst2):
+            outlst = [0 for num in range(len(inlst1) - 1)]
+            for num1 in range(len(inlst1) - 1):
+                for num2 in range(len(inlst1) - 1 - num1):
+                    outlst[num1 + num2] += inlst1[num1] * inlst2[num2]
+            return outlst
+        if not self.isMUM():
+            raise Exception("Not a local MUM point")
+        else:
+            holsol = self.hol_sol([1], termnum - 1)
+            logsol = self.log_sol([[0], holsol], termnum - 1)[1:]
+            mult = logsol
+            outstr = [1] + [0 for num in range(termnum - 2)]
+            for num in range(1, termnum - 1):
+                for num2 in range(num, termnum - 1):
+                    outstr[num2] += mult[num2 - num]
+                print(mult, outstr)
+                mult = listdiv(mult, num + 1)
+                mult = mulcoeff(mult, logsol)
+            return [0] + outstr
         
 if __name__ == "__main__":
     op = PFO(TEST_PFO)
