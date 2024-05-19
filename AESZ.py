@@ -112,3 +112,4 @@ def print_all_AESZ():
         
 if __name__ == '__main__':
     a = AESZ(5)
+    ap = a.pfo

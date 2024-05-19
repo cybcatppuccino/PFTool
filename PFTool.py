@@ -22,6 +22,7 @@ t = sympy.Symbol('t')
 zdelta = sympy.Symbol('zdelta')
 
 DEG_BOUND = 15
+Z_DEG_BOUND = 100
 TEST_PFO = "(t ** 4) - z * (t + 1/5) * (t + 2/5) * (t + 3/5) * (t + 4/5)"
 LEG = "z * (z-1) * d^2 + (2*z - 1) * d + 1/4"
 
@@ -172,7 +173,51 @@ class PFO:
     
     # Now we are ready to solve the PFeqn. Holomorphic solutions first.
     # Then it's time to find all solutions at the MUM point.
-    # Also we want to compute the transition matrices between different points numerically. 
+    # Also we want to compute the transition matrices between different points numerically.
+    
+    # Get the coeff matrix of primtform
+    def primtform_list(self):
+        outlst = []
+        for num in range(self.deg + 1):
+            c = self.primtform.coeff(t, num)
+            num2 = Z_DEG_BOUND
+            while c.coeff(z, num2) == 0:
+                num2 -= 1
+            outlst.append([c.coeff(z, num3) for num3 in range(num2 + 1)])
+        return outlst
+    
+    def find_holo_sol(self, inlst, termnum):
+        plist = self.primtform_list()
+        c = [0 for num in range(termnum)]
+        outlst = []
+        def mono_opr(deg, coeff):
+            for num1 in range(self.deg + 1):
+                for num2 in range(len(plist[num1])):
+                    if deg + num2 < termnum:
+                        c[deg + num2] += coeff * plist[num1][num2] * (deg ** num1)
+                    else:
+                        break
+        for num in range(len(inlst)):
+            if num < termnum:
+                outlst.append(inlst[num])
+                mono_opr(num, inlst[num])
+            else:
+                break
+        for num in range(len(inlst), termnum):
+            den = 0
+            for num1 in range(self.deg + 1):
+                den += plist[num1][0] * (num ** num1)
+            if den == 0:
+                raise Exception("div 0")
+            newterm = 0
+            if type(den) == type(1):
+                newterm = -c[num] * sympy.Rational(1, den)
+            else:
+                newterm = -c[num] / den
+            outlst.append(newterm)
+            mono_opr(num, newterm)
+        return outlst
+        
         
 if __name__ == "__main__":
     # op = PFO(TEST_PFO)
