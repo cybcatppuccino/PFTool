@@ -137,6 +137,8 @@ class PFO:
         
         # Local Exponents (Not calculated at first)
         self.localexp = None
+        # Primitive t-form List
+        self.primtlist = None
         
         if pr:
             print("Operator Constructed!")
@@ -177,14 +179,18 @@ class PFO:
     
     # Get the coeff matrix of primtform
     def primtform_list(self):
-        outlst = []
-        for num in range(self.deg + 1):
-            c = self.primtform.coeff(t, num)
-            num2 = Z_DEG_BOUND
-            while c.coeff(z, num2) == 0:
-                num2 -= 1
-            outlst.append([c.coeff(z, num3) for num3 in range(num2 + 1)])
-        return outlst
+        if self.primtlist == None:
+            outlst = []
+            for num in range(self.deg + 1):
+                c = self.primtform.coeff(t, num)
+                num2 = Z_DEG_BOUND
+                while c.coeff(z, num2) == 0:
+                    num2 -= 1
+                outlst.append([c.coeff(z, num3) for num3 in range(num2 + 1)])
+            self.primtlist = outlst
+            return outlst
+        else:
+            return self.primtlist
     
     def hol_sol(self, inlst, termnum):
         plist = self.primtform_list()
@@ -199,25 +205,24 @@ class PFO:
                             c[deg + num2] += plist[num1][num2] * cdn
                         else:
                             break
-        for num in range(len(inlst)):
-            if num < termnum:
-                outlst.append(inlst[num])
-                mono_opr(num, inlst[num])
-            else:
-                break
-        for num in range(len(inlst), termnum):
+        for num in range(termnum):
             den = 0
             for num1 in range(self.deg + 1):
                 den += plist[num1][0] * (num ** num1)
+            # print(den, c, outlst, den == 0, num)
             if den == 0:
-                raise Exception("div 0")
-            newterm = 0
-            if type(den) == type(1):
-                newterm = -c[num] * sympy.Rational(1, den)
+                if num < len(inlst):
+                    outlst.append(inlst[num])
+                    mono_opr(num, inlst[num])
+                else:
+                    raise Exception("div 0")
             else:
-                newterm = -c[num] / den
-            outlst.append(newterm)
-            mono_opr(num, newterm)
+                if type(den) == type(1):
+                    newterm = -c[num] * sympy.Rational(1, den)
+                else:
+                    newterm = -c[num] / den
+                outlst.append(newterm)
+                mono_opr(num, newterm)
         return outlst
     
     def log_sol(self, inlst, termnum):
@@ -247,47 +252,62 @@ class PFO:
                             c[deg + num2] += cdn * plist[num1][num2]
                         else:
                             break
-        for num2 in range(len(inlst)):
+        for num2 in range(1, len(inlst)):
             for num in range(len(inlst[num2])):
                 if num < termnum:
-                    if num2 == 0:
-                        outlst.append(inlst[0][num])
                     log_mono_opr(num, num2, inlst[num2][num])
                 else:
                     break
-        for num in range(len(inlst[0]), termnum):
+        for num in range(termnum):
             den = 0
             for num1 in range(self.deg + 1):
                 den += plist[num1][0] * (num ** num1)
             if den == 0:
-                raise Exception("div 0")
-            newterm = 0
-            if type(den) == type(1):
-                newterm = -c[num] * sympy.Rational(1, den)
+                if num < len(inlst[0]):
+                    outlst.append(inlst[0][num])
+                    mono_opr(num, inlst[0][num])
+                else:
+                    raise Exception("div 0")
             else:
-                newterm = -c[num] / den
-            outlst.append(newterm)
-            mono_opr(num, newterm)
+                if type(den) == type(1):
+                    newterm = -c[num] * sympy.Rational(1, den)
+                else:
+                    newterm = -c[num] / den
+                outlst.append(newterm)
+                mono_opr(num, newterm)
         return outlst
     
     def all_sol(self, termnum):
-        pass
+        soldict = dict()
+        rootsdict = sympy.roots(self.localind, t)
+        roots = rootsdict.keys()
+        UPPERBOUND = max(roots)
+        def listdiv(inlst, num):
+            fct = sympy.factorial(num)
+            return [term / fct for term in inlst]
+        for root in roots:
+            # Get the Holomorphic Solution
+            initval = [0 for num in range(UPPERBOUND + 1)]
+            initval[root] = 1
+            sollist = [self.hol_sol(initval, termnum)]
+            for logdeg in range(1, rootsdict[root]):
+                initval = [[0 for num in range(UPPERBOUND + 1)]]
+                for num in range(1, len(sollist) + 1):
+                    initval.append(listdiv(sollist[-num], num))
+                sollist.append(self.log_sol(initval, termnum))
+            soldict[root] = sollist
+        return soldict
         
         
 if __name__ == "__main__":
-    # op = PFO(TEST_PFO)
-    # print(op.localexp())
-    op2 = PFO(TEST_LIST22)
-    print(op2)
-    print(op2.calclocalexp())
+    op = PFO(TEST_PFO)
+    print(op)
+    print(op.all_sol(6))
+    
     print()
-    l = PFO(LEG)
-    print(l.hol_sol([1], 10))
-    print(l.log_sol([[0], l.hol_sol([1], 10)], 10))
-    '''
-    op2 = PFO(LEG)
-    print(op2)
-    print(op2.discriminant())
-    '''
+    
+    op3=op.calclocalexp()[0][1]
+    print(op3)
+    print(op3.all_sol(6))
     
     
