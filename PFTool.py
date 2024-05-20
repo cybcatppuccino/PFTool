@@ -22,8 +22,8 @@ t = sympy.Symbol('t')
 
 zdelta = sympy.Symbol('zdelta')
 
-DEG_BOUND = 15
-Z_DEG_BOUND = 100
+DEG_BOUND = 30
+Z_DEG_BOUND = 150
 TEST_PFO = "(t ** 4) - z * (t + 1/5) * (t + 2/5) * (t + 3/5) * (t + 4/5)"
 LEG = "z * (z-1) * d^2 + (2*z - 1) * d + 1/4"
 
@@ -303,7 +303,7 @@ class PFO:
         return sympy.expand(self.localind - t ** self.deg) == 0
     
     # [q(x)=e^(log_sol/hol_sol), x(q)]
-    def qcoord(self, termnum):
+    def qcoord(self, termnum, pr=False):
         def listdiv(inlst, num):
             fct = sympy.Integer(num)
             return [term / fct for term in inlst]
@@ -322,6 +322,8 @@ class PFO:
         if sympy.roots(self.localind, t)[0] < 2:
             raise Exception("t^2 not a factor of local index")
         else:
+            if pr:
+                print("Start to compute q-coordinates!")
             holsol = self.hol_sol([1], termnum - 1)
             logsol = self.log_sol([[0], holsol], termnum - 1)[1:]
             
@@ -339,6 +341,9 @@ class PFO:
                     outlst[num2] += mult[num2 - num]
                 mult = listdiv(mult, num + 1)
                 mult = mulcoeff(mult, logsol)
+                
+            if pr:
+                print("The expansion of q(z) in z is done!")
             
             negoutlst = listdiv(outlst[1:], -1)
             mult = negoutlst
@@ -353,22 +358,23 @@ class PFO:
             for num in range(2, termnum):
                 mult = mulcoeff2(mult, invoutlst)
                 outlst2.append(mult[num - 1] / sympy.Integer(num))
+            
+            if pr:
+                print("The expansion of z(q) in q is done!")
 
             return ([0] + outlst, [0] + outlst2)
     
     # Only CY eqn in the database satisfies some good conditions
     def yukawa(self, termnum, pr=False):
-        
-        if pr:
-            print("Started!")
             
-        zq = self.qcoord(termnum)[1][1:]
+        zq = self.qcoord(termnum, pr)[1][1:]
         
         if pr:
-            print("Computation of q-coordinate completed!")
+            print("Computation of q-coordinates completed!")
         
         yuk = PFO(2 * self.primdform.coeff(d, 4) * d - self.primdform.coeff(d, 3))
         alist = yuk.hol_sol([0, 0, 0, 1], termnum + 3)[3:]
+        print(alist)
         
         if pr:
             print("ODE Solved!")
@@ -430,13 +436,27 @@ class PFO:
                 outlst[num2] += mult[num2 - num]
             mult = mulcoeff(mult, invlst)
         
+        return outlst
+        
+    def instanton(self, termnum, pr=False):
+        
+        yk = self.yukawa(termnum, pr)
+        
         if pr:
-            print("Successfully done!")
+            print("Start to compute the instanton!")
+        
+        outlst = [1]
+        for num in range(1, termnum):
+            outlst.append(yk[num] / (sympy.Integer(num) ** 3))
+            for num2 in range(2, termnum):
+                if num2 * num >= termnum:
+                    break
+                else:
+                    yk[num2 * num] -= yk[num]
         
         return outlst
         
-        
 if __name__ == "__main__":
     opr = PFO(TEST_PFO)
-    print(opr.yukawa(5, pr=True))
+    print(opr.instanton(5, pr=True))
     
