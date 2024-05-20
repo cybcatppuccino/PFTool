@@ -113,10 +113,10 @@ def print_all_AESZ():
 if __name__ == '__main__':
     
     # a = AESZ(465)
-    a = AESZ(466)
+    a = AESZ(3)
     ap = a.pfo
     print(a)
-    print(a.pfo.yukawa(8, pr=True))
+    print(ap.yukawa(8) == a.yukawa)
     
     '''
     print(ap.all_sol(8))

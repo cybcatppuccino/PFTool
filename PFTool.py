@@ -438,5 +438,5 @@ class PFO:
         
 if __name__ == "__main__":
     opr = PFO(TEST_PFO)
-    print(opr.yukawa(25, pr=True))
+    print(opr.yukawa(5, pr=True))
     
