@@ -20,8 +20,8 @@ z = sympy.Symbol('z')
 
 # Legendre Homogeneous Polynomial
 LP = sympy.expand(x3 * x2**2 + x1*(x1 - x3)*(x1 - z * x3))
-QP = sympy.expand(x1**5 + x2**5 + x3**5 + x4**5 + x5**5 + z*x1*x2*x3*x4*x5)
-FP = sympy.expand(x1**4 + x2**4 + x3**4 + x4**4 + z*x1*x2*x3*x4)
+QP = sympy.expand(x1**5 + x2**5 + x3**5 + x4**5 + x5**5 - 5 * z*x1*x2*x3*x4*x5)
+FP = sympy.expand(x1**4 + x2**4 + x3**4 + x4**4 - 4 * z*x1*x2*x3*x4)
 
 # We always consider homogeneous polynomials
 
@@ -70,7 +70,45 @@ class HP:
             self.gbinjac.append(outlst)
             
     def reduced(self, inpoly):
+        outlst = [0 for num in range(len(self.varlist))]
+        if inpoly == 0:
+            return (outlst, 0)
+        gbred = sympy.reduced(inpoly, self.gb, self.varlist)
+        outpoly = gbred[1]
+        for num in range(len(self.gb)):
+            for varnum in range(len(self.varlist)):
+                outlst[varnum] += gbred[0][num] * self.gbinjac[num][varnum]
+        return (outlst, outpoly)
         
-        
-        
-l = HP(FP)
+    def list_reduced(self, inlst):
+        outlst = inlst.copy()
+        for deg in range(len(outlst), 0, -1):
+            outlst[deg - 1] = sympy.simplify(outlst[deg - 1])
+            rs = self.reduced(outlst[deg - 1])
+            outlst[deg - 1] = sympy.simplify(rs[1])
+            if deg > 1:
+                outlst[deg - 2] += sum(sympy.diff(rs[0][num], self.varlist[num]) for num in range(len(self.varlist))) / sympy.Integer(deg - 1)
+        while outlst[-1] == 0 and (len(outlst) > 0):
+            outlst = outlst[:-1]
+        return outlst
+    
+    def t_derivative(self, inlst):
+        outlst = [0 for num in range(len(inlst) + 1)]
+        for num in range(len(inlst)):
+            outlst[num] += z * sympy.diff(inlst[num], z)
+            outlst[num + 1] -= z * (num + 1) * inlst[num] * self.eqn.diff(z)
+        while outlst[-1] == 0 and (len(outlst) > 0):
+            outlst = outlst[:-1]
+        return self.list_reduced(outlst)
+
+
+l = HP(QP)
+d0 = [z]
+d1 = l.t_derivative(d0)
+print(d1)
+d2 = l.t_derivative(d1)
+print(d2)
+d3 = l.t_derivative(d2)
+print(d3)
+d4 = l.t_derivative(d3)
+print(d4)
