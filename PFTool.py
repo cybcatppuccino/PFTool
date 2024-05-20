@@ -9,23 +9,17 @@ import fractions
 
 # The Symbols
 # z: the variable of the ODE
-# lgz: log(z), only used in log solutions
 # d: the differential operator d/dz
 # t: the differential operator z * d/dz
 
-# zdelta: used when considering z to z+zdelta
-
 z = sympy.Symbol('z')
-lgz = sympy.Symbol('lgz')
 d = sympy.Symbol('d')
 t = sympy.Symbol('t')
-
-zdelta = sympy.Symbol('zdelta')
 
 DEG_BOUND = 30
 Z_DEG_BOUND = 150
 # TEST_PFO = -3125*d**4*z**5 + d**4*z**4 - 25000*d**3*z**4 + 6*d**3*z**3 - 45000*d**2*z**3 + 7*d**2*z**2 - 15000*d*z**2 + d*z - 120*z
-TEST_PFO = "-3125*d**4*z**5 + d**4*z**4 - 25000*d**3*z**4 + 6*d**3*z**3 - 45000*d**2*z**3 + 7*d**2*z**2 - 15000*d*z**2 + d*z - 120*z"
+TEST_PFO = "z * (-3125*d**4*z**5 + d**4*z**4 - 25000*d**3*z**4 + 6*d**3*z**3 - 45000*d**2*z**3 + 7*d**2*z**2 - 15000*d*z**2 + d*z - 120*z)"
 LEG = "z * (z-1) * d^2 + (2*z - 1) * d + 1/4"
 
 
