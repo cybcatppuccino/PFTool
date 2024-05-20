@@ -24,17 +24,14 @@ zdelta = sympy.Symbol('zdelta')
 
 DEG_BOUND = 30
 Z_DEG_BOUND = 150
-TEST_PFO = "(t ** 4) - z * (t + 1/5) * (t + 2/5) * (t + 3/5) * (t + 4/5)"
+# TEST_PFO = -3125*d**4*z**5 + d**4*z**4 - 25000*d**3*z**4 + 6*d**3*z**3 - 45000*d**2*z**3 + 7*d**2*z**2 - 15000*d*z**2 + d*z - 120*z
+TEST_PFO = "-3125*d**4*z**5 + d**4*z**4 - 25000*d**3*z**4 + 6*d**3*z**3 - 45000*d**2*z**3 + 7*d**2*z**2 - 15000*d*z**2 + d*z - 120*z"
 LEG = "z * (z-1) * d^2 + (2*z - 1) * d + 1/4"
 
 
 # We introduce
 X = sympy.Symbol('t')
-# Because on AESZ List they have (e.g. AESZ300 and AESZ22): 
-TEST_LIST300 = [X**4, 240+2560*X+9456*X**2+13792*X**3+5936*X**4, 
-1628160+13957120*X+33556480*X**2+21186560*X**3+2293760*X**4,
--3422617600*X**4-12288000000*X**3-9065267200*X**2-2457600000*X-221184000,
-1048576000*(5*X+1)*(5*X+2)*(5*X+3)*(5*X+4)]
+# Because on AESZ List they have (e.g. AESZ22): 
 TEST_LIST22 = [49*X**4, -1085*X**4-2002*X**3-1638*X**2-637*X-98,
 -16105*X**4-68044*X**3-102261*X**2-66094*X-15736, 21000*X**4+68712*X**3+72568*X**2+30072*X+3808,
 -7440*X**4-20256*X**3-23024*X**2-12896*X-2944, 512*(X+1)**4]
@@ -64,7 +61,7 @@ def d_power_inv_list(n):
 def to_d_form(ineqn):
     ineqn = sympy.expand(ineqn)
     t_deg = DEG_BOUND
-    while (ineqn.coeff(t, t_deg) == 0):
+    while (ineqn.coeff(t, t_deg) == 0) and (t_deg > -1):
         t_deg -= 1
     lst = t_power_to_d_list(t_deg)
     outeqn = 0
@@ -75,7 +72,7 @@ def to_d_form(ineqn):
 def to_t_form(ineqn):
     ineqn = sympy.expand(ineqn)
     d_deg = DEG_BOUND
-    while (ineqn.coeff(d, d_deg) == 0):
+    while (ineqn.coeff(d, d_deg) == 0) and (d_deg > -1):
         d_deg -= 1
     lst = d_power_to_t_list(d_deg)
     outeqn = 0
@@ -109,12 +106,12 @@ class PFO:
         # Considering String Input
         eqn = ineqn
         if type(ineqn) == type("string"):
-            eqn = sympy.sympify(ineqn, evaluate=False, rational=True, convert_xor=True)
+            eqn = sympy.sympify(ineqn.replace("^", "**"), evaluate=False, rational=True, convert_xor=False)
         elif type(ineqn) == type(["List", 114514]):
             eqn = 0
             for num in range(len(ineqn)):
                 eqn += ineqn[num] * (z ** num)
-        ineqn = sympy.expand(eqn)
+        ineqn = sympy.simplify(eqn)
         
         # Standard Forms
         self.dform = to_d_form(ineqn)
@@ -122,7 +119,7 @@ class PFO:
         
         # Degree
         self.deg = DEG_BOUND
-        while (self.dform.coeff(d, self.deg) == 0):
+        while (self.dform.coeff(d, self.deg) == 0) and (self.deg > -1):
             self.deg -= 1
         
         # Primitive Forms
@@ -374,10 +371,11 @@ class PFO:
         
         yuk = PFO(2 * self.primdform.coeff(d, 4) * d - self.primdform.coeff(d, 3))
         alist = yuk.hol_sol([0, 0, 0, 1], termnum + 3)[3:]
-        print(alist)
         
         if pr:
             print("ODE Solved!")
+            print("eqn = ", sympy.simplify(self.primdform.coeff(d,3) / (2 * self.primdform.coeff(d,4))))
+            print("alist = ", alist)
         
         def listdiv(inlst, num):
             fct = sympy.Integer(num)
@@ -458,5 +456,6 @@ class PFO:
         
 if __name__ == "__main__":
     opr = PFO(TEST_PFO)
+    print(opr)
+    print(opr.all_sol(5))
     print(opr.instanton(5, pr=True))
-    

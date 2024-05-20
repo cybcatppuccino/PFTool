@@ -113,13 +113,10 @@ def print_all_AESZ():
 if __name__ == '__main__':
     
     # a = AESZ(465)
-    a = AESZ(13)
+    a = AESZ(1)
     ap = a.pfo
     print(a)
-    print(ap.yukawa(10))
-    print(ap.instanton(10))
-    
-    print(sympy.simplify(ap.primdform.coeff(d,3) / ap.primdform.coeff(d,4)))
+    print(ap.yukawa(30, pr=True))
     
     '''
     print(ap.all_sol(8))
