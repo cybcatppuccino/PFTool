@@ -111,8 +111,29 @@ def print_all_AESZ():
     f.close()
         
 if __name__ == '__main__':
-    a = AESZ(465)
+    
+    # a = AESZ(465)
+    a = AESZ(466)
     ap = a.pfo
     print(a)
+    print(a.pfo.yukawa(8, pr=True))
+    
+    '''
     print(ap.all_sol(8))
     print(ap.qcoord(8))
+    print(sympy.simplify(ap.primdform.coeff(d,3) / ap.primdform.coeff(d,4)))
+    
+    Y = sympy.Function('Y')
+    C1 = sympy.Symbol('C1')
+    ode = 2 * ap.primdform.coeff(d, 4) * Y(z).diff(z) - ap.primdform.coeff(d, 3) * Y(z)
+    rst = sympy.cancel(sympy.dsolve(ode).rhs.subs([(C1, 1)]) / (z ** 3))
+    ps = sympy.fps(rst).truncate(8).removeO()
+    
+    print(ps)
+    '''
+
+    '''
+    b = AESZ(175) # AESZ 34
+    c = b.pfo.translation(sympy.Rational(-1, 7))
+    print(c, c.all_sol(8))
+    '''

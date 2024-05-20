@@ -319,8 +319,8 @@ class PFO:
                 for num2 in range(len(inlst1) - num1):
                     outlst[num1 + num2] += inlst1[num1] * inlst2[num2]
             return outlst
-        if not self.isMUM():
-            raise Exception("Not a local MUM point")
+        if sympy.roots(self.localind, t)[0] < 2:
+            raise Exception("t^2 not a factor of local index")
         else:
             holsol = self.hol_sol([1], termnum - 1)
             logsol = self.log_sol([[0], holsol], termnum - 1)[1:]
@@ -355,8 +355,99 @@ class PFO:
                 outlst2.append(mult[num - 1] / sympy.Integer(num))
 
             return ([0] + outlst, [0] + outlst2)
+    
+    # Only CY eqn in the database satisfies some good conditions
+    def yukawa(self, termnum, pr=False):
+        
+        if pr:
+            print("Started!")
+            
+        zq = self.qcoord(termnum)[1][1:]
+        
+        if pr:
+            print("Computation of q-coordinate completed!")
+        
+        # Solving ODE
+        
+        Y = sympy.Function('Y')
+        C1 = sympy.Symbol('C1')
+        ode = 2 * self.primdform.coeff(d, 4) * Y(z).diff(z) - self.primdform.coeff(d, 3) * Y(z)
+        rst = sympy.cancel(sympy.dsolve(ode).rhs.subs([(C1, 1)]) / (z ** 3))
+        
+        if pr:
+            print("ODE Solved!")
+        
+        ps = sympy.fps(rst).truncate(termnum).removeO()
+        a = sympy.cancel(ps / ps.coeff(z, 0))
+        alist = [a.coeff(z, num) for num in range(termnum)]
+        
+        if pr:
+            print("Solution Expanded!")
+        
+        def listdiv(inlst, num):
+            fct = sympy.Integer(num)
+            return [term / fct for term in inlst]
+        def mulcoeff(inlst1, inlst2):
+            outlst = [0 for num in range(len(inlst1) - 1)]
+            for num1 in range(len(inlst1) - 1):
+                for num2 in range(len(inlst1) - 1 - num1):
+                    outlst[num1 + num2] += inlst1[num1] * inlst2[num2]
+            return outlst
+        def mulcoeff2(inlst1, inlst2):
+            outlst = [0 for num in range(len(inlst1))]
+            for num1 in range(len(inlst1)):
+                for num2 in range(len(inlst2)):
+                    if num1 + num2 >= len(inlst1):
+                        break
+                    else:
+                        outlst[num1 + num2] += inlst1[num1] * inlst2[num2]
+            return outlst
+        
+        holsol = self.hol_sol([1], termnum)
+        logsol = self.log_sol([[0], holsol], termnum)[1:]
+        
+        holsol = listdiv(holsol[1:], -1)
+        mult = logsol
+        for num in range(1, termnum):
+            mult = mulcoeff(mult, holsol)
+            for num2 in range(num, termnum - 1):
+                logsol[num2] += mult[num2 - num]
+        
+        for num in range(1, termnum):
+            logsol[num-1] *= num
+        logsol = [1] + logsol
+        holsol = [1] + listdiv(holsol, -1)
+        
+        if pr:
+            print("Ready for denominator multiplication!")
+        
+        mult = mulcoeff2(mulcoeff2(mulcoeff2(mulcoeff2(mulcoeff2(logsol, logsol), logsol), holsol), holsol), alist)
+        invlst = [1] + [0 for num in range(termnum - 1)]
+        
+        zqmult = zq
+        for num in range(1, termnum):
+            for num2 in range(num, termnum):
+                invlst[num2] += mult[num] * zqmult[num2 - num]
+            zqmult = mulcoeff(zqmult, zq)
+            
+        if pr:
+            print("Now in q-coordinate!")
+            
+        outlst = [1] + [0 for num in range(termnum - 1)]
+        invlst = listdiv(invlst[1:], -1)
+        mult = invlst
+        for num in range(1, termnum):
+            for num2 in range(num, termnum):
+                outlst[num2] += mult[num2 - num]
+            mult = mulcoeff(mult, invlst)
+        
+        if pr:
+            print("Successfully done!")
+        
+        return outlst
+        
         
 if __name__ == "__main__":
     opr = PFO(TEST_PFO)
-    print(opr.qcoord(6))
+    print(opr.yukawa(25, pr=True))
     
