@@ -373,9 +373,9 @@ class PFO:
         alist = yuk.hol_sol([0, 0, 0, 1], termnum + 3)[3:]
         
         if pr:
-            print("ODE Solved!")
-            print("eqn = ", sympy.simplify(self.primdform.coeff(d,3) / (2 * self.primdform.coeff(d,4))))
-            print("alist = ", alist)
+            print("ODE a'(z) = g(z)a(z) Solved!")
+            print("g(z) = ", str(sympy.simplify(self.primdform.coeff(d,3) / (2 * self.primdform.coeff(d,4)))).replace('**', '^') )
+            print("a(z)/z^3 = ", alist)
         
         def listdiv(inlst, num):
             fct = sympy.Integer(num)
