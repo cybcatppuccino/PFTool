@@ -367,22 +367,11 @@ class PFO:
         if pr:
             print("Computation of q-coordinate completed!")
         
-        # Solving ODE
-        
-        Y = sympy.Function('Y')
-        C1 = sympy.Symbol('C1')
-        ode = 2 * self.primdform.coeff(d, 4) * Y(z).diff(z) - self.primdform.coeff(d, 3) * Y(z)
-        rst = sympy.cancel(sympy.dsolve(ode).rhs.subs([(C1, 1)]) / (z ** 3))
+        yuk = PFO(2 * self.primdform.coeff(d, 4) * d - self.primdform.coeff(d, 3))
+        alist = yuk.hol_sol([0, 0, 0, 1], termnum + 3)[3:]
         
         if pr:
             print("ODE Solved!")
-        
-        ps = sympy.fps(rst).truncate(termnum).removeO()
-        a = sympy.cancel(ps / ps.coeff(z, 0))
-        alist = [a.coeff(z, num) for num in range(termnum)]
-        
-        if pr:
-            print("Solution Expanded!")
         
         def listdiv(inlst, num):
             fct = sympy.Integer(num)
