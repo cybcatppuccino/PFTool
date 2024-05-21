@@ -56,6 +56,9 @@ class HP:
         
         self.jac = [sympy.simplify(self.eqn.diff(self.varlist[num])) for num in range(len(self.varlist))]
         self.auxjac = [self.jac[num] - self.auxvarlist[num] for num in range(len(self.varlist))]
+        
+        print(str(self.auxjac).replace("**", "^"), self.varlist + self.auxvarlist)
+        
         self.auxgb = sympy.groebner(self.auxjac, self.varlist + self.auxvarlist, domain='QQ(z)', order='grlex')
         
         print("auxGB done! Length = ", len(self.auxgb))
@@ -151,4 +154,4 @@ def stupid_linear_sol_t(f, g):
 
 # print(stupid_linear_sol_d(1, LP))
 # print(stupid_linear_sol_t(1, LP))
-print(stupid_linear_sol_d(x4**2, x4 ** 6 - x4 ** 3 * (x4 ** 2 - x1 * x2) * x3 - z * x1 * x2 * x3 * (x4 - x1) * (x4 - x2) * (x4 - x3)))
+# print(stupid_linear_sol_d(x4**2, x4**6 - x4**3 * (x4**2 - x1*x2) * x3 - z * x1*x2*x3 * (x4-x1)*(x4-x2)*(x4-x3)))
