@@ -36,21 +36,13 @@ class PolyCombination:
         self.setsubdata()
         return self
     
-    def rem_two(self, polycomb):
-        outPoly = PolyCombination(self.poly.rem(polycomb.poly))
-        mul = self.poly.quo(polycomb.poly)
-        outPoly.lst = [self.lst[num] - polycomb.lst[num] * mul for num in range(len(self.lst))]
+    def rem(self, polycomb):
+        rs = self.poly.div(list(term.poly for term in polycomb))
+        outPoly = PolyCombination(rs[1])
+        outPoly.lst = [self.lst[num] - sum(polycomb[num2].lst[num] * rs[0][num2] for num2 in range(len(rs[0]))) for num in range(len(self.lst))]
         # print("rem_two", self.poly, polycomb.poly)
         outPoly.setsubdata()
         return outPoly
-    
-    def rem(self, inlst):
-        if len(inlst) == 0:
-            return self
-        elif len(inlst) == 1:
-            return self.rem_two(inlst[0])
-        else:
-            return self.rem_two(inlst[0]).rem(inlst[1:])
     
     def monic(self):
         # return self.poly.monic()
@@ -141,7 +133,7 @@ def _exbuchberger(f, ring):
         '''
         
         h = g.rem([ f[j] for j in J ])
-        # print("h1", g.poly, h.poly, [ f[j].poly for j in J ], bool(h.poly))
+        print("h1", h.poly, bool(h.poly))
 
         if not h.poly:
         # if h.notzero():
@@ -241,7 +233,7 @@ def _exbuchberger(f, ring):
             p = f[i]
             r = p.rem(f[:i])
             
-            # print("r", r.poly, list(term.poly for term in f[:i]), bool(r.poly))
+            print("r", r.poly, bool(r.poly))
             if r.poly:
             # if not r.notzero():
                 f1.append(r.monic())
@@ -331,7 +323,7 @@ def red_groebner(G, ring):
         Q = []
         for i, p in enumerate(P):
             h = p.rem(P[:i] + P[i + 1:])
-            # print("h2", type(h), h, bool(h))
+            print("h2", h, bool(h))
             
             if h.poly:
             # if not h.notzero():
@@ -359,11 +351,8 @@ if __name__ == "__main__":
     x1 = sympy.Symbol('x1')
     x2 = sympy.Symbol('x2')
     x3 = sympy.Symbol('x3')
-    y1 = sympy.Symbol('y1')
-    y2 = sympy.Symbol('y2')
-    y3 = sympy.Symbol('y3')
+    x4 = sympy.Symbol('x4')
     z = sympy.Symbol('z')
     gb = GroebnerBasis([3*x1**2 - 2*x1*x3*z - 2*x1*x3 + x3**2*z, 2*x2*x3, -x1**2*z - x1**2 + 2*x1*x3*z + x2**2], \
                        [x1, x2, x3], domain='QQ(z)', order='grlex')
-    print(sympy.GroebnerBasis([3*x1**2 - 2*x1*x3*z - 2*x1*x3 + x3**2*z, 2*x2*x3, -x1**2*z - x1**2 + 2*x1*x3*z + x2**2], \
-                       [x1, x2, x3], domain='QQ(z)', order='grlex'))
+    print(len(GroebnerBasis([x2*x3*(2*x1*x2*x3*z - 2*x1*x2*x4*z - 2*x1*x3*x4*z + 2*x1*x4**2*z - x2*x3*x4*z + x2*x4**2*z + x3*x4**2*z - x4**3*z + x4**3), x1*x3*(2*x1*x2*x3*z - 2*x1*x2*x4*z - x1*x3*x4*z + x1*x4**2*z - 2*x2*x3*x4*z + 2*x2*x4**2*z + x3*x4**2*z - x4**3*z + x4**3), 2*x1**2*x2**2*x3*z - x1**2*x2**2*x4*z - 2*x1**2*x2*x3*x4*z + x1**2*x2*x4**2*z - 2*x1*x2**2*x3*x4*z + x1*x2**2*x4**2*z + 2*x1*x2*x3*x4**2*z - x1*x2*x4**3*z + x1*x2*x4**3 - x4**5, -x1**2*x2**2*x3*z - x1**2*x2*x3**2*z + 2*x1**2*x2*x3*x4*z - x1*x2**2*x3**2*z + 2*x1*x2**2*x3*x4*z + 2*x1*x2*x3**2*x4*z - 3*x1*x2*x3*x4**2*z + 3*x1*x2*x3*x4**2 - 5*x3*x4**4 + 6*x4**5], [x1, x2, x3, x4], domain='QQ(z)', order='grlex')[0]))

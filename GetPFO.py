@@ -165,4 +165,5 @@ def stupid_linear_sol_t(f, g):
 
 # print(stupid_linear_sol_d(1, LP))
 # print(stupid_linear_sol_t(1, FP))
-# print(stupid_linear_sol_d(x4**2, x4**6 - x4**3 * (x4**2 - x1*x2) * x3 - z * x1*x2*x3 * (x4-x1)*(x4-x2)*(x4-x3)))
+# print(len(sympy.GroebnerBasis([x2*x3*(2*x1*x2*x3*z - 2*x1*x2*x4*z - 2*x1*x3*x4*z + 2*x1*x4**2*z - x2*x3*x4*z + x2*x4**2*z + x3*x4**2*z - x4**3*z + x4**3), x1*x3*(2*x1*x2*x3*z - 2*x1*x2*x4*z - x1*x3*x4*z + x1*x4**2*z - 2*x2*x3*x4*z + 2*x2*x4**2*z + x3*x4**2*z - x4**3*z + x4**3), 2*x1**2*x2**2*x3*z - x1**2*x2**2*x4*z - 2*x1**2*x2*x3*x4*z + x1**2*x2*x4**2*z - 2*x1*x2**2*x3*x4*z + x1*x2**2*x4**2*z + 2*x1*x2*x3*x4**2*z - x1*x2*x4**3*z + x1*x2*x4**3 - x4**5, -x1**2*x2**2*x3*z - x1**2*x2*x3**2*z + 2*x1**2*x2*x3*x4*z - x1*x2**2*x3**2*z + 2*x1*x2**2*x3*x4*z + 2*x1*x2*x3**2*x4*z - 3*x1*x2*x3*x4**2*z + 3*x1*x2*x3*x4**2 - 5*x3*x4**4 + 6*x4**5], [x1, x2, x3, x4], domain='QQ(z)', order='grlex')))
+print(stupid_linear_sol_d(x4**2, x4**6 - x4**3 * (x4**2 - x1*x2) * x3 - z * x1*x2*x3 * (x4-x1)*(x4-x2)*(x4-x3)))

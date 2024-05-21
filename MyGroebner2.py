@@ -117,9 +117,17 @@ def _buchberger(f, ring):
         return pr
 
     def normal(g, J):
+        # h = g.rem([ f[j] for j in J ])
+        # print("normal = ", [ f[j] for j in J ])
+        
+        '''
+        h = g
+        for j in J:
+            h = h.rem(f[j])
+        '''
         h = g.rem([ f[j] for j in J ])
         
-        print("h1", h, [ f[j] for j in J ], bool(h))
+        print("h1", h, bool(h))
         if not h:
             return None
         else:
@@ -217,7 +225,7 @@ def _buchberger(f, ring):
             p = f[i]
             r = p.rem(f[:i])
             
-            print("r", r, f[:i], bool(r))
+            print("r", r, bool(r))
             if r:
                 f1.append(r.monic())
 
@@ -331,11 +339,9 @@ if __name__ == "__main__":
     x1 = sympy.Symbol('x1')
     x2 = sympy.Symbol('x2')
     x3 = sympy.Symbol('x3')
-    y1 = sympy.Symbol('y1')
-    y2 = sympy.Symbol('y2')
-    y3 = sympy.Symbol('y3')
+    x4 = sympy.Symbol('x4')
     z = sympy.Symbol('z')
     gb = GroebnerBasis([3*x1**2 - 2*x1*x3*z - 2*x1*x3 + x3**2*z, 2*x2*x3, -x1**2*z - x1**2 + 2*x1*x3*z + x2**2], \
                        [x1, x2, x3], domain='QQ(z)', order='grlex')
-    print(sympy.GroebnerBasis([3*x1**2 - 2*x1*x3*z - 2*x1*x3 + x3**2*z, 2*x2*x3, -x1**2*z - x1**2 + 2*x1*x3*z + x2**2], \
-                       [x1, x2, x3], domain='QQ(z)', order='grlex'))
+    print(len(GroebnerBasis([x2*x3*(2*x1*x2*x3*z - 2*x1*x2*x4*z - 2*x1*x3*x4*z + 2*x1*x4**2*z - x2*x3*x4*z + x2*x4**2*z + x3*x4**2*z - x4**3*z + x4**3), x1*x3*(2*x1*x2*x3*z - 2*x1*x2*x4*z - x1*x3*x4*z + x1*x4**2*z - 2*x2*x3*x4*z + 2*x2*x4**2*z + x3*x4**2*z - x4**3*z + x4**3), 2*x1**2*x2**2*x3*z - x1**2*x2**2*x4*z - 2*x1**2*x2*x3*x4*z + x1**2*x2*x4**2*z - 2*x1*x2**2*x3*x4*z + x1*x2**2*x4**2*z + 2*x1*x2*x3*x4**2*z - x1*x2*x4**3*z + x1*x2*x4**3 - x4**5, -x1**2*x2**2*x3*z - x1**2*x2*x3**2*z + 2*x1**2*x2*x3*x4*z - x1*x2**2*x3**2*z + 2*x1*x2**2*x3*x4*z + 2*x1*x2*x3**2*x4*z - 3*x1*x2*x3*x4**2*z + 3*x1*x2*x3*x4**2 - 5*x3*x4**4 + 6*x4**5], [x1, x2, x3, x4], domain='QQ(z)', order='grlex')))
+
