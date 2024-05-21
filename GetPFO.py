@@ -1,5 +1,6 @@
 import sympy
 import PFTool
+import MyGroebner
 
 # sympy.Symbols
 x1 = sympy.Symbol('x1')
@@ -59,7 +60,7 @@ class HP:
         
         print(str(self.auxjac).replace("**", "^"), self.varlist + self.auxvarlist)
         
-        self.auxgb = sympy.groebner(self.auxjac, self.varlist + self.auxvarlist, domain='QQ(z)', order='grlex')
+        self.auxgb = MyGroebner.GroebnerBasis(self.auxjac, self.varlist + self.auxvarlist, domain='QQ(z)', order='grlex')
         
         print("auxGB done! Length = ", len(self.auxgb))
         
@@ -151,6 +152,9 @@ def stupid_linear_sol_t(f, g):
         for num2 in range(num):
             tlist[-1][num2] -= (tlist[-1][num] / tlist[num][num]) * tlist[num][num2]
     return sympy.simplify(outeqn)
+
+
+# gb = MyGroebner.GroebnerBasis([x1**3, x2**3], [x1, x2], domain='QQ(z)', order='grlex')
 
 # print(stupid_linear_sol_d(1, LP))
 # print(stupid_linear_sol_t(1, LP))
