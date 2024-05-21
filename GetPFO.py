@@ -9,12 +9,14 @@ x3 = sympy.Symbol('x3')
 x4 = sympy.Symbol('x4')
 x5 = sympy.Symbol('x5')
 
+'''
 # extra variables to represent the Groebner basis into the original one
 y1 = sympy.Symbol('y1')
 y2 = sympy.Symbol('y2')
 y3 = sympy.Symbol('y3')
 y4 = sympy.Symbol('y4')
 y5 = sympy.Symbol('y5')
+'''
 
 # the family variable
 z = sympy.Symbol('z')
@@ -48,25 +50,27 @@ class HP:
     def __init__(self, ineqn):
         self.eqn = sympy.expand(ineqn)
         self.varlist = []
-        self.auxvarlist = []
+        # self.auxvarlist = []
         for num in range(5):
             if "x" + str(num + 1) in str(self.eqn):
                 self.varlist.append([x1, x2, x3, x4, x5][num])
-                self.auxvarlist.append([y1, y2, y3, y4, y5][num])
+                # self.auxvarlist.append([y1, y2, y3, y4, y5][num])
         
         print("Preparation done!")
         
         self.jac = [sympy.simplify(self.eqn.diff(self.varlist[num])) for num in range(len(self.varlist))]
-        self.auxjac = [self.jac[num] - self.auxvarlist[num] for num in range(len(self.varlist))]
+        # self.auxjac = [self.jac[num] - self.auxvarlist[num] for num in range(len(self.varlist))]
         
-        print(str(self.auxjac).replace("**", "^"), self.varlist + self.auxvarlist)
+        print(str(self.jac).replace("**", "^"), self.varlist)
         
         # print(MyGroebner.GroebnerBasis(self.jac, self.varlist, domain='QQ(z)', order='grlex'))
+        # self.auxgb = MyGroebner.GroebnerBasis(self.auxjac, self.varlist + self.auxvarlist, domain='QQ(z)', order='grlex')
         
-        self.auxgb = MyGroebner.GroebnerBasis(self.auxjac, self.varlist + self.auxvarlist, domain='QQ(z)', order='grlex')
+        self.gb, self.gbinjac = MyGroebner.GroebnerBasis(self.jac, self.varlist, domain='QQ(z)', order='grlex')
         
-        print("auxGB done! Length = ", len(self.auxgb))
+        print("extendedGB done! Length = ", len(self.gb))
         
+        '''
         self.gb = []
         self.gbinjac = []
         jacsubs = [(self.auxvarlist[num], self.jac[num]) for num in range(len(self.varlist))]
@@ -80,8 +84,8 @@ class HP:
                 outlst.append(sympy.cancel(rest / var).subs(jacsubs))
             self.gb.append(-term)
             self.gbinjac.append(outlst)
-            
         print("HP generated!")
+        '''
             
     def reduced(self, inpoly):
         print("Reducing ", str(inpoly)[:50])
@@ -159,6 +163,6 @@ def stupid_linear_sol_t(f, g):
 
 # gb = MyGroebner.GroebnerBasis([x1**3, x2**3], [x1, x2], domain='QQ(z)', order='grlex')
 
-print(stupid_linear_sol_d(1, LP))
+# print(stupid_linear_sol_d(1, LP))
 # print(stupid_linear_sol_t(1, FP))
 # print(stupid_linear_sol_d(x4**2, x4**6 - x4**3 * (x4**2 - x1*x2) * x3 - z * x1*x2*x3 * (x4-x1)*(x4-x2)*(x4-x3)))
