@@ -22,9 +22,12 @@ y5 = sympy.Symbol('y5')
 z = sympy.Symbol('z')
 
 # Legendre Homogeneous Polynomial
+LP2 = sympy.expand(x3 * x2**2 + x1*(z * x1 + x3)*(x1 - z * x3))
 LP = sympy.expand(x3 * x2**2 + x1*(x1 - x3)*(x1 - z * x3))
 QP = sympy.expand(x1**5 + x2**5 + x3**5 + x4**5 + x5**5 - (1 / z)*x1*x2*x3*x4*x5)
+FP2 = sympy.expand(x1**4 + x2**4 + x3**4 + x4**4 - (1 / z)*(x3**2*x4**2 + x1*x2*x3*x4))
 FP = sympy.expand(x1**4 + x2**4 + x3**4 + x4**4 - (1 / z)*x1*x2*x3*x4)
+CP2 = sympy.expand(x1**3 + x2**3 + x3**3 - (1 / z)*(x1**2 * x2 + x1*x2*x3))
 CP = sympy.expand(x1**3 + x2**3 + x3**3 - (1 / z)*x1*x2*x3)
 
 # We always consider homogeneous polynomials
@@ -103,9 +106,10 @@ class HP:
         print("Reducing list", str(inlst)[:50])
         outlst = inlst.copy()
         for deg in range(len(outlst), 0, -1):
-            outlst[deg - 1] = sympy.simplify(outlst[deg - 1])
+            # outlst[deg - 1] = sympy.simplify(outlst[deg - 1])
             rs = self.reduced(outlst[deg - 1])
-            outlst[deg - 1] = sympy.simplify(rs[1])
+            # outlst[deg - 1] = sympy.simplify(rs[1])
+            outlst[deg - 1] = rs[1]
             if deg > 1:
                 outlst[deg - 2] += sum(sympy.diff(rs[0][num], self.varlist[num]) for num in range(len(self.varlist))) / sympy.Integer(deg - 1)
         while outlst[-1] == 0 and (len(outlst) > 0):
@@ -136,6 +140,7 @@ def stupid_linear_sol_d(f, g):
     dlist = [[f]]
     while len(dlist[-1]) == len(dlist):
         dlist.append(gg.d_derivative(dlist[-1]))
+    print(dlist)
     outeqn = d ** (len(dlist) - 1)
     for num in range(len(dlist) - 2, -1, -1):
         if type(dlist[num][num]) == type(1):
@@ -146,11 +151,20 @@ def stupid_linear_sol_d(f, g):
     return sympy.simplify(outeqn)
 
 t = PFTool.t
+def gen_t_list(f, g, n):
+    gg = HP(g)
+    tlist = [[f]]
+    for num in range(n):
+        tlist.append(gg.t_derivative(tlist[-1]))
+    print(tlist)
+    return tlist
+
 def stupid_linear_sol_t(f, g):
     gg = HP(g)
     tlist = [[f]]
     while len(tlist[-1]) == len(tlist):
         tlist.append(gg.t_derivative(tlist[-1]))
+    print(tlist)
     outeqn = t ** (len(tlist) - 1)
     for num in range(len(tlist) - 2, -1, -1):
         if type(tlist[num][num]) == type(1):
@@ -161,9 +175,10 @@ def stupid_linear_sol_t(f, g):
     return sympy.simplify(outeqn)
 
 
+# gen_t_list(x1, x3 * LP, 2)
 # gb = MyGroebner.GroebnerBasis([x1**3, x2**3], [x1, x2], domain='QQ(z)', order='grlex')
-
 # print(stupid_linear_sol_d(1, LP))
 # print(stupid_linear_sol_t(1, FP))
+print(stupid_linear_sol_t(1, FP2))
 # print(len(sympy.GroebnerBasis([x2*x3*(2*x1*x2*x3*z - 2*x1*x2*x4*z - 2*x1*x3*x4*z + 2*x1*x4**2*z - x2*x3*x4*z + x2*x4**2*z + x3*x4**2*z - x4**3*z + x4**3), x1*x3*(2*x1*x2*x3*z - 2*x1*x2*x4*z - x1*x3*x4*z + x1*x4**2*z - 2*x2*x3*x4*z + 2*x2*x4**2*z + x3*x4**2*z - x4**3*z + x4**3), 2*x1**2*x2**2*x3*z - x1**2*x2**2*x4*z - 2*x1**2*x2*x3*x4*z + x1**2*x2*x4**2*z - 2*x1*x2**2*x3*x4*z + x1*x2**2*x4**2*z + 2*x1*x2*x3*x4**2*z - x1*x2*x4**3*z + x1*x2*x4**3 - x4**5, -x1**2*x2**2*x3*z - x1**2*x2*x3**2*z + 2*x1**2*x2*x3*x4*z - x1*x2**2*x3**2*z + 2*x1*x2**2*x3*x4*z + 2*x1*x2*x3**2*x4*z - 3*x1*x2*x3*x4**2*z + 3*x1*x2*x3*x4**2 - 5*x3*x4**4 + 6*x4**5], [x1, x2, x3, x4], domain='QQ(z)', order='grlex')))
-print(stupid_linear_sol_d(x4**2, x4**6 - x4**3 * (x4**2 - x1*x2) * x3 - z * x1*x2*x3 * (x4-x1)*(x4-x2)*(x4-x3)))
+# print(stupid_linear_sol_d(x4**2, x4**6 - x4**3 * (x4**2 - x1*x2) * x3 - z * x1*x2*x3 * (x4-x1)*(x4-x2)*(x4-x3)))
