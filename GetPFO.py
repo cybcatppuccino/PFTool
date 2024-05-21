@@ -51,9 +51,14 @@ class HP:
             if "x" + str(num + 1) in str(self.eqn):
                 self.varlist.append([x1, x2, x3, x4, x5][num])
                 self.auxvarlist.append([y1, y2, y3, y4, y5][num])
+        
+        print("Preparation done!")
+        
         self.jac = [sympy.simplify(self.eqn.diff(self.varlist[num])) for num in range(len(self.varlist))]
         self.auxjac = [self.jac[num] - self.auxvarlist[num] for num in range(len(self.varlist))]
         self.auxgb = sympy.groebner(self.auxjac, self.varlist + self.auxvarlist, domain='QQ(z)', order='grlex')
+        
+        print("auxGB done! Length = ", len(self.auxgb))
         
         self.gb = []
         self.gbinjac = []
@@ -69,7 +74,10 @@ class HP:
             self.gb.append(-term)
             self.gbinjac.append(outlst)
             
+        print("HP generated!")
+            
     def reduced(self, inpoly):
+        print("Reducing ", str(inpoly)[:50])
         outlst = [0 for num in range(len(self.varlist))]
         if inpoly == 0:
             return (outlst, inpoly)
@@ -81,6 +89,7 @@ class HP:
         return (outlst, outpoly)
         
     def list_reduced(self, inlst):
+        print("Reducing list", str(inlst)[:50])
         outlst = inlst.copy()
         for deg in range(len(outlst), 0, -1):
             outlst[deg - 1] = sympy.simplify(outlst[deg - 1])
@@ -111,7 +120,7 @@ class HP:
         return self.list_reduced(outlst)
 
 d = PFTool.d
-def linear_sol_d(f, g):
+def stupid_linear_sol_d(f, g):
     gg = HP(g)
     dlist = [[f]]
     while len(dlist[-1]) == len(dlist):
@@ -126,7 +135,7 @@ def linear_sol_d(f, g):
     return sympy.simplify(outeqn)
 
 t = PFTool.t
-def linear_sol_t(f, g):
+def stupid_linear_sol_t(f, g):
     gg = HP(g)
     tlist = [[f]]
     while len(tlist[-1]) == len(tlist):
@@ -140,5 +149,6 @@ def linear_sol_t(f, g):
             tlist[-1][num2] -= (tlist[-1][num] / tlist[num][num]) * tlist[num][num2]
     return sympy.simplify(outeqn)
 
-print(linear_sol_d(1, LP))
-print(linear_sol_t(1, LP))
+# print(stupid_linear_sol_d(1, LP))
+# print(stupid_linear_sol_t(1, LP))
+print(stupid_linear_sol_d(x4**2, x4 ** 6 - x4 ** 3 * (x4 ** 2 - x1 * x2) * x3 - z * x1 * x2 * x3 * (x4 - x1) * (x4 - x2) * (x4 - x3)))
