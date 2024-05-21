@@ -39,7 +39,10 @@ class PolyCombination:
     def rem(self, polycomb):
         rs = self.poly.div(list(term.poly for term in polycomb))
         outPoly = PolyCombination(rs[1])
-        outPoly.lst = [self.lst[num] - sum(polycomb[num2].lst[num] * rs[0][num2] for num2 in range(len(rs[0]))) for num in range(len(self.lst))]
+        if not rs[1]:
+            outPoly.lst = [0 for num in range(len(self.lst))]
+        else:
+            outPoly.lst = [self.lst[num] - sum(polycomb[num2].lst[num] * rs[0][num2] for num2 in range(len(rs[0]))) for num in range(len(self.lst))]
         # print("rem_two", self.poly, polycomb.poly)
         outPoly.setsubdata()
         return outPoly
