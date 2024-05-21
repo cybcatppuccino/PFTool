@@ -72,8 +72,8 @@ class HP:
     def reduced(self, inpoly):
         outlst = [0 for num in range(len(self.varlist))]
         if inpoly == 0:
-            return (outlst, 0)
-        gbred = sympy.reduced(inpoly, self.gb, self.varlist)
+            return (outlst, inpoly)
+        gbred = sympy.reduced(inpoly, self.gb, gens=self.varlist)
         outpoly = gbred[1]
         for num in range(len(self.gb)):
             for varnum in range(len(self.varlist)):
@@ -96,19 +96,49 @@ class HP:
         outlst = [0 for num in range(len(inlst) + 1)]
         for num in range(len(inlst)):
             outlst[num] += z * sympy.diff(inlst[num], z)
-            outlst[num + 1] -= z * (num + 1) * inlst[num] * self.eqn.diff(z)
+            outlst[num + 1] -= z * (num + 1) * inlst[num] * sympy.diff(self.eqn, z)
+        while outlst[-1] == 0 and (len(outlst) > 0):
+            outlst = outlst[:-1]
+        return self.list_reduced(outlst)
+    
+    def d_derivative(self, inlst):
+        outlst = [0 for num in range(len(inlst) + 1)]
+        for num in range(len(inlst)):
+            outlst[num] += sympy.diff(inlst[num], z)
+            outlst[num + 1] -= (num + 1) * inlst[num] * sympy.diff(self.eqn, z)
         while outlst[-1] == 0 and (len(outlst) > 0):
             outlst = outlst[:-1]
         return self.list_reduced(outlst)
 
+d = PFTool.d
+def linear_sol_d(f, g):
+    gg = HP(g)
+    dlist = [[f]]
+    while len(dlist[-1]) == len(dlist):
+        dlist.append(gg.d_derivative(dlist[-1]))
+    outeqn = d ** (len(dlist) - 1)
+    for num in range(len(dlist) - 2, -1, -1):
+        if type(dlist[num][num]) == type(1):
+            dlist[num][num] = sympy.Integer(dlist[num][num])
+        outeqn -= (dlist[-1][num] / dlist[num][num]) * (d ** num)
+        for num2 in range(num):
+            dlist[-1][num2] -= (dlist[-1][num] / dlist[num][num]) * dlist[num][num2]
+    return sympy.simplify(outeqn)
 
-l = HP(QP)
-d0 = [z]
-d1 = l.t_derivative(d0)
-print(d1)
-d2 = l.t_derivative(d1)
-print(d2)
-d3 = l.t_derivative(d2)
-print(d3)
-d4 = l.t_derivative(d3)
-print(d4)
+t = PFTool.t
+def linear_sol_t(f, g):
+    gg = HP(g)
+    tlist = [[f]]
+    while len(tlist[-1]) == len(tlist):
+        tlist.append(gg.t_derivative(tlist[-1]))
+    outeqn = t ** (len(tlist) - 1)
+    for num in range(len(tlist) - 2, -1, -1):
+        if type(tlist[num][num]) == type(1):
+            tlist[num][num] = sympy.Integer(tlist[num][num])
+        outeqn -= (tlist[-1][num] / tlist[num][num]) * (t ** num)
+        for num2 in range(num):
+            tlist[-1][num2] -= (tlist[-1][num] / tlist[num][num]) * tlist[num][num2]
+    return sympy.simplify(outeqn)
+
+print(linear_sol_d(1, LP))
+print(linear_sol_t(1, LP))
