@@ -159,6 +159,6 @@ def stupid_linear_sol_t(f, g):
 
 # gb = MyGroebner.GroebnerBasis([x1**3, x2**3], [x1, x2], domain='QQ(z)', order='grlex')
 
-# print(stupid_linear_sol_d(1, LP))
+print(stupid_linear_sol_d(1, LP))
 # print(stupid_linear_sol_t(1, FP))
 # print(stupid_linear_sol_d(x4**2, x4**6 - x4**3 * (x4**2 - x1*x2) * x3 - z * x1*x2*x3 * (x4-x1)*(x4-x2)*(x4-x3)))

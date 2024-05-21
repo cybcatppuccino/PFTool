@@ -11,30 +11,84 @@ from sympy.polys.polyerrors import DomainError
 from sympy.polys.polytools import parallel_poly_from_expr
 from sympy.polys.rings import PolyRing
 from sympy.polys.polytools import Poly
+from sympy import Integer
+
+class PolyCombination:
+    
+    def __init__(self, inpoly=None, inlst=None):
+        self.poly = inpoly
+        self.lst = inlst
+        
+    def setsubdata(self):
+        print(self.lst)
+        # self.rem = self.poly.rem
+        self.LT = self.poly.LT
+        self.LM = self.poly.LM
+        self.iterterms = self.poly.iterterms
+    
+    def setdata(self, inpoly, num, all_num, ring):
+        self.poly = ring.from_dict(inpoly.rep.to_dict())
+        self.lst = [ring.zero for _ in range(all_num)]
+        self.lst[num] = ring.one
+        # self.lst = [0 for _ in range(all_num)]
+        # self.lst[num] = 1
+        
+        self.setsubdata()
+        return self
+    
+    def rem_two(self, polycomb):
+        outPoly = PolyCombination(self.poly.rem(polycomb.poly), [])
+        mul = self.poly.quo(polycomb.poly)
+        outPoly.lst = [term * mul for term in self.lst]
+        outPoly.setsubdata()
+        return outPoly
+    
+    def rem(self, inlst):
+        if len(inlst) == 0:
+            return self
+        elif len(inlst) == 1:
+            return self.rem_two(inlst[0])
+        else:
+            return self.rem(inlst[1:])
+    
+    def monic(self):
+        # return self.poly.monic()
+        outPoly = PolyCombination(self.poly.monic(), [])
+        outPoly.lst = [term.quo_ground(self.poly.LC) for term in self.lst]
+        # outPoly.lst = [term / self.poly.LC for term in self.lst]
+        outPoly.setsubdata()
+        return outPoly
+    
+    def mul_monom(self, inp):
+        outPoly = PolyCombination(self.poly.mul_monom(inp), [])
+        outPoly.lst = [term.mul_monom(inp) for term in self.lst]
+        outPoly.setsubdata()
+        return outPoly
+    
+    # def notzero(self):
+    #     return not (self.poly)
+
+def MyMinus(polycomb1, polycomb2):
+    outPoly = PolyCombination(polycomb1.poly - polycomb2.poly, [])
+    outPoly.lst = [polycomb1.lst[num] - polycomb2.lst[num] for num in range(len(polycomb1.lst))]
+    outPoly.setsubdata()
+    return outPoly
 
 def GroebnerBasis(F, *gens, **args):
     polys, opt = parallel_poly_from_expr(F, *gens, **args)
     ring = PolyRing(opt.gens, opt.domain, opt.order)
-    polys = [ring.from_dict(poly.rep.to_dict()) for poly in polys if poly]
-    G = groebner(polys, ring, method='buchberger')
-    G = [g.as_expr() for g in G]
-    
-    return G
-    
+    polys = [PolyCombination().setdata(polys[num], num, len(polys), ring) for num in range(len(polys))]
+    G = groebner(polys, ring, method='exbuchberger')
+    Gaux = [g.lst for g in G]
+    G = [g.poly.as_expr() for g in G]
+    return G, Gaux
 
-def groebner(seq, ring, method='buchberger'):
-    """
-    Computes Groebner basis for a set of polynomials in `K[X]`.
 
-    Wrapper around the (default) improved Buchberger and the other algorithms
-    for computing Groebner bases. The choice of algorithm can be changed via
-    ``method`` argument or :func:`sympy.polys.polyconfig.setup`, where
-    ``method`` can be either ``buchberger`` or ``f5b``.
 
-    """
+def groebner(seq, ring, method='exbuchberger'):
 
     _groebner_methods = {
-        'buchberger': _buchberger,
+        'exbuchberger': _exbuchberger,
     }
 
     _groebner = _groebner_methods[method]
@@ -56,47 +110,11 @@ def groebner(seq, ring, method='buchberger'):
 
     return G
 
-def _buchberger(f, ring):
+def _exbuchberger(f, ring):
     """
-    Computes Groebner basis for a set of polynomials in `K[X]`.
-
-    Given a set of multivariate polynomials `F`, finds another
-    set `G`, such that Ideal `F = Ideal G` and `G` is a reduced
-    Groebner basis.
-
-    The resulting basis is unique and has monic generators if the
-    ground domains is a field. Otherwise the result is non-unique
-    but Groebner bases over e.g. integers can be computed (if the
-    input polynomials are monic).
-
-    Groebner bases can be used to choose specific generators for a
-    polynomial ideal. Because these bases are unique you can check
-    for ideal equality by comparing the Groebner bases.  To see if
-    one polynomial lies in an ideal, divide by the elements in the
-    base and see if the remainder vanishes.
-
-    They can also be used to solve systems of polynomial equations
-    as,  by choosing lexicographic ordering,  you can eliminate one
-    variable at a time, provided that the ideal is zero-dimensional
-    (finite number of solutions).
-
-    Notes
-    =====
-
-    Algorithm used: an improved version of Buchberger's algorithm
-    as presented in T. Becker, V. Weispfenning, Groebner Bases: A
-    Computational Approach to Commutative Algebra, Springer, 1993,
-    page 232.
-
-    References
-    ==========
-
-    .. [1] [Bose03]_
-    .. [2] [Giovini91]_
-    .. [3] [Ajwa95]_
-    .. [4] [Cox97]_
-
+    Computes Groebner basis for a set of polynomials in `K[X]`. The original algorithm is the non-extended version. 
     """
+    
     order = ring.order
 
     monomial_mul = ring.monomial_mul
@@ -110,9 +128,18 @@ def _buchberger(f, ring):
         return pr
 
     def normal(g, J):
+        # h = g.rem([ f[j] for j in J ])
+        # print("normal = ", [ f[j] for j in J ])
+        '''
+        h = g
+        for j in J:
+            h = h.rem(f[j])
+        '''
         h = g.rem([ f[j] for j in J ])
+        # print("h1", type(h), h, bool(h))
 
-        if not h:
+        if not h.poly:
+        # if h.notzero():
             return None
         else:
             h = h.monic()
@@ -208,11 +235,13 @@ def _buchberger(f, ring):
         for i in range(len(f)):
             p = f[i]
             r = p.rem(f[:i])
-
-            if r:
+            # print("r", type(r), type(r.poly), r, r.poly, bool(r))
+            
+            if r.poly:
+            # if not r.notzero():
                 f1.append(r.monic())
 
-        if f == f1:
+        if len(f) == len(f1):
             break
 
     I = {}            # ip = I[p]; p = f[ip]
@@ -280,7 +309,7 @@ def spoly(p1, p2, ring):
     m2 = ring.monomial_div(LCM12, LM2)
     s1 = p1.mul_monom(m1)
     s2 = p2.mul_monom(m2)
-    s = s1 - s2
+    s = MyMinus(s1, s2)
     return s
 
 def red_groebner(G, ring):
@@ -297,7 +326,10 @@ def red_groebner(G, ring):
         Q = []
         for i, p in enumerate(P):
             h = p.rem(P[:i] + P[i + 1:])
-            if h:
+            # print("h2", type(h), h, bool(h))
+            
+            if h.poly:
+            # if not h.notzero():
                 Q.append(h)
 
         return [p.monic() for p in Q]
@@ -314,3 +346,17 @@ def red_groebner(G, ring):
     # Becker, Weispfenning, p. 217: H is Groebner basis of the ideal generated by G.
     return reduction(H)
 
+
+if __name__ == "__main__":
+    import sympy
+
+    # sympy.Symbols
+    x1 = sympy.Symbol('x1')
+    x2 = sympy.Symbol('x2')
+    x3 = sympy.Symbol('x3')
+    y1 = sympy.Symbol('y1')
+    y2 = sympy.Symbol('y2')
+    y3 = sympy.Symbol('y3')
+    z = sympy.Symbol('z')
+    gb = GroebnerBasis([3*x1**2 - 2*x1*x3*z - 2*x1*x3 + x3**2*z, 2*x2*x3, -x1**2*z - x1**2 + 2*x1*x3*z + x2**2], \
+                       [x1, x2, x3], domain='QQ(z)', order='grlex')
