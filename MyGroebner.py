@@ -50,7 +50,7 @@ class PolyCombination:
         elif len(inlst) == 1:
             return self.rem_two(inlst[0])
         else:
-            return self.rem(inlst[1:])
+            return self.rem_two(inlst[0]).rem(inlst[1:])
     
     def monic(self):
         # return self.poly.monic()
@@ -83,10 +83,9 @@ def GroebnerBasis(F, *gens, **args):
     ring = PolyRing(opt.gens, opt.domain, opt.order)
     polys = [PolyCombination().setdata(polys[num], num, len(polys), ring) for num in range(len(polys))]
     G = groebner(polys, ring, method='exbuchberger')
-    Gaux = [g.lst for g in G]
+    Gaux = list(list(term.as_expr() for term in g.lst) for g in G)
     G = [g.poly.as_expr() for g in G]
     return G, Gaux
-
 
 
 def groebner(seq, ring, method='exbuchberger'):
@@ -134,13 +133,15 @@ def _exbuchberger(f, ring):
     def normal(g, J):
         # h = g.rem([ f[j] for j in J ])
         # print("normal = ", [ f[j] for j in J ])
+        
         '''
         h = g
         for j in J:
-            h = h.rem(f[j])
+            h = h.rem_two(f[j])
         '''
+        
         h = g.rem([ f[j] for j in J ])
-        print("h1", h.poly, bool(h.poly))
+        # print("h1", g.poly, h.poly, [ f[j].poly for j in J ], bool(h.poly))
 
         if not h.poly:
         # if h.notzero():
@@ -239,8 +240,8 @@ def _exbuchberger(f, ring):
         for i in range(len(f)):
             p = f[i]
             r = p.rem(f[:i])
-            print("r", r.poly, bool(r.poly))
             
+            # print("r", r.poly, list(term.poly for term in f[:i]), bool(r.poly))
             if r.poly:
             # if not r.notzero():
                 f1.append(r.monic())
@@ -330,7 +331,7 @@ def red_groebner(G, ring):
         Q = []
         for i, p in enumerate(P):
             h = p.rem(P[:i] + P[i + 1:])
-            print("h2", type(h), h, bool(h))
+            # print("h2", type(h), h, bool(h))
             
             if h.poly:
             # if not h.notzero():

@@ -119,7 +119,7 @@ def _buchberger(f, ring):
     def normal(g, J):
         h = g.rem([ f[j] for j in J ])
         
-        print("h1", h, bool(h))
+        print("h1", h, [ f[j] for j in J ], bool(h))
         if not h:
             return None
         else:
@@ -217,7 +217,7 @@ def _buchberger(f, ring):
             p = f[i]
             r = p.rem(f[:i])
             
-            print("r", r, bool(r))
+            print("r", r, f[:i], bool(r))
             if r:
                 f1.append(r.monic())
 
