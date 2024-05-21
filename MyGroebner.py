@@ -4,11 +4,9 @@
 from __future__ import print_function, division
 
 from sympy.core.compatibility import range
-from sympy.core.symbol import Dummy
 from sympy.polys.monomials import monomial_mul, monomial_lcm, monomial_divides, term_div
 from sympy.polys.orderings import lex
 from sympy.polys.polyerrors import DomainError
-from sympy.polys.polyconfig import query
 
 from sympy.polys.polytools import parallel_poly_from_expr
 from sympy.polys.rings import PolyRing
@@ -34,17 +32,12 @@ def groebner(seq, ring, method='buchberger'):
     ``method`` can be either ``buchberger`` or ``f5b``.
 
     """
-    if method is None:
-        method = query('groebner')
 
     _groebner_methods = {
         'buchberger': _buchberger,
     }
 
-    try:
-        _groebner = _groebner_methods[method]
-    except KeyError:
-        raise ValueError("'%s' is not a valid Groebner bases algorithm (valid are 'buchberger' and 'f5b')" % method)
+    _groebner = _groebner_methods[method]
 
     domain, orig = ring.domain, None
 

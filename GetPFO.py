@@ -21,8 +21,9 @@ z = sympy.Symbol('z')
 
 # Legendre Homogeneous Polynomial
 LP = sympy.expand(x3 * x2**2 + x1*(x1 - x3)*(x1 - z * x3))
-QP = sympy.expand(x1**5 + x2**5 + x3**5 + x4**5 + x5**5 - 5 * z*x1*x2*x3*x4*x5)
-FP = sympy.expand(x1**4 + x2**4 + x3**4 + x4**4 - 4 * z*x1*x2*x3*x4)
+QP = sympy.expand(x1**5 + x2**5 + x3**5 + x4**5 + x5**5 - (1 / z)*x1*x2*x3*x4*x5)
+FP = sympy.expand(x1**4 + x2**4 + x3**4 + x4**4 - (1 / z)*x1*x2*x3*x4)
+CP = sympy.expand(x1**3 + x2**3 + x3**3 - (1 / z)*x1*x2*x3)
 
 # We always consider homogeneous polynomials
 
@@ -59,6 +60,8 @@ class HP:
         self.auxjac = [self.jac[num] - self.auxvarlist[num] for num in range(len(self.varlist))]
         
         print(str(self.auxjac).replace("**", "^"), self.varlist + self.auxvarlist)
+        
+        # print(MyGroebner.GroebnerBasis(self.jac, self.varlist, domain='QQ(z)', order='grlex'))
         
         self.auxgb = MyGroebner.GroebnerBasis(self.auxjac, self.varlist + self.auxvarlist, domain='QQ(z)', order='grlex')
         
@@ -157,5 +160,5 @@ def stupid_linear_sol_t(f, g):
 # gb = MyGroebner.GroebnerBasis([x1**3, x2**3], [x1, x2], domain='QQ(z)', order='grlex')
 
 # print(stupid_linear_sol_d(1, LP))
-# print(stupid_linear_sol_t(1, LP))
+# print(stupid_linear_sol_t(1, FP))
 # print(stupid_linear_sol_d(x4**2, x4**6 - x4**3 * (x4**2 - x1*x2) * x3 - z * x1*x2*x3 * (x4-x1)*(x4-x2)*(x4-x3)))
