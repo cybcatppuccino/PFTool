@@ -9,15 +9,6 @@ x3 = sympy.Symbol('x3')
 x4 = sympy.Symbol('x4')
 x5 = sympy.Symbol('x5')
 
-'''
-# extra variables to represent the Groebner basis into the original one
-y1 = sympy.Symbol('y1')
-y2 = sympy.Symbol('y2')
-y3 = sympy.Symbol('y3')
-y4 = sympy.Symbol('y4')
-y5 = sympy.Symbol('y5')
-'''
-
 # the family variable
 z = sympy.Symbol('z')
 
@@ -72,26 +63,9 @@ class HP:
         self.gb, self.gbinjac = MyGroebner.GroebnerBasis(self.jac, self.varlist, domain='QQ(z)', order='grlex')
         
         print("extendedGB done! Length = ", len(self.gb))
-        
-        '''
-        self.gb = []
-        self.gbinjac = []
-        jacsubs = [(self.auxvarlist[num], self.jac[num]) for num in range(len(self.varlist))]
-        for term0 in self.auxgb:
-            term = term0
-            outlst = []
-            for var in self.auxvarlist:
-                const = term.coeff(var, 0)
-                rest = term - const
-                term = const
-                outlst.append(sympy.cancel(rest / var).subs(jacsubs))
-            self.gb.append(-term)
-            self.gbinjac.append(outlst)
-        print("HP generated!")
-        '''
             
     def reduced(self, inpoly):
-        print("Reducing ", str(inpoly)[:50])
+        print("Reducing ", inpoly)
         outlst = [0 for num in range(len(self.varlist))]
         if inpoly == 0:
             return (outlst, inpoly)
@@ -179,6 +153,6 @@ def stupid_linear_sol_t(f, g):
 # gb = MyGroebner.GroebnerBasis([x1**3, x2**3], [x1, x2], domain='QQ(z)', order='grlex')
 # print(stupid_linear_sol_d(1, LP))
 # print(stupid_linear_sol_t(1, FP))
-print(stupid_linear_sol_t(1, FP2))
+gen_t_list(1, FP2, 4)
 # print(len(sympy.GroebnerBasis([x2*x3*(2*x1*x2*x3*z - 2*x1*x2*x4*z - 2*x1*x3*x4*z + 2*x1*x4**2*z - x2*x3*x4*z + x2*x4**2*z + x3*x4**2*z - x4**3*z + x4**3), x1*x3*(2*x1*x2*x3*z - 2*x1*x2*x4*z - x1*x3*x4*z + x1*x4**2*z - 2*x2*x3*x4*z + 2*x2*x4**2*z + x3*x4**2*z - x4**3*z + x4**3), 2*x1**2*x2**2*x3*z - x1**2*x2**2*x4*z - 2*x1**2*x2*x3*x4*z + x1**2*x2*x4**2*z - 2*x1*x2**2*x3*x4*z + x1*x2**2*x4**2*z + 2*x1*x2*x3*x4**2*z - x1*x2*x4**3*z + x1*x2*x4**3 - x4**5, -x1**2*x2**2*x3*z - x1**2*x2*x3**2*z + 2*x1**2*x2*x3*x4*z - x1*x2**2*x3**2*z + 2*x1*x2**2*x3*x4*z + 2*x1*x2*x3**2*x4*z - 3*x1*x2*x3*x4**2*z + 3*x1*x2*x3*x4**2 - 5*x3*x4**4 + 6*x4**5], [x1, x2, x3, x4], domain='QQ(z)', order='grlex')))
 # print(stupid_linear_sol_d(x4**2, x4**6 - x4**3 * (x4**2 - x1*x2) * x3 - z * x1*x2*x3 * (x4-x1)*(x4-x2)*(x4-x3)))

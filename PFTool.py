@@ -90,6 +90,33 @@ def to_primitive(ineqn, var, deg):
         gcd = sympy.gcd(gcd, ineqn.coeff(var, num))
     return sympy.expand(sympy.cancel(ineqn / gcd))
 
+def integer_to_p_adic(inint, inprime):
+    outtuple = (inint, 0)
+    while True:
+        rs = divmod(outtuple[0], inprime)
+        if rs[1]:
+            return outtuple
+        else:
+            outtuple = (rs[0], outtuple[1] + 1)
+            
+def eGCD(a, b):
+    prevx, x = 1, 0
+    prevy, y = 0, 1
+    while b:
+        rs = divmod(a, b)
+        x, prevx = prevx - rs[0]*x, x
+        y, prevy = prevy - rs[0]*y, y
+        a, b = b, rs[1]
+    if a >= 0:
+        return a, (prevx, prevy)
+    else:
+        return -a, (-prevx, -prevy)
+
+# The p-adic number Class
+class PN:
+    def __init__(self, innum, inprime, indeg):
+        pass
+
 # The Picard Fuchs Operator Class
 class PFO:
     def __init__(self, ineqn, pr=False):
