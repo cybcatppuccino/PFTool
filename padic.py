@@ -2,7 +2,7 @@ import math
 import sympy
 import fractions
 
-def integer_to_p_adic(inint, inprime):
+def int_to_p_adic(inint, inprime):
     if not inint:
         return (0, math.inf)
     outtuple = (inint, 0)
@@ -26,6 +26,22 @@ def eGCD(a, b):
     else:
         return -a, (-prevx, -prevy)
 
+def rat_to_p_adic(inint1, inint2, inprime, inacc):
+    rs1 = int_to_p_adic(inint1, inprime)
+    rs2 = int_to_p_adic(inint2, inprime)
+    po = inprime ** inacc
+    return ((rs1[0] * eGCD(rs2[0], po)[1][0]) % po, rs1[1] - rs2[1])
+
+def to_p_adic(term, inprime, inacc):
+    if type(term) == type(1):
+        return int_to_p_adic(term, inprime)
+    elif type(term) == type(fractions.Fraction(1, 2)):
+        return rat_to_p_adic(int(term.numerator), int(term.denominator), inprime, inacc)
+    elif term.is_Integer:
+        return int_to_p_adic(int(term), inprime)
+    elif term.is_Rational:
+        return rat_to_p_adic(int(term.numerator()), int(term.denominator()), inprime, inacc)
+
 # The p-adic number Class
 class PN:
     def __init__(self, inprime, inacc):
@@ -33,13 +49,13 @@ class PN:
         self.acc = inacc
         self.ppow = inprime ** inacc
     def setint(self, inint):
-        rs = integer_to_p_adic(inint, self.p)
+        rs = int_to_p_adic(inint, self.p)
         self.deg = rs[1]
         self.num = rs[0] % self.ppow
         return self
     def setfrac(self, innum, inden):
-        rs1 = integer_to_p_adic(innum, self.p)
-        rs2 = integer_to_p_adic(inden, self.p)
+        rs1 = int_to_p_adic(innum, self.p)
+        rs2 = int_to_p_adic(inden, self.p)
         self.deg = rs1[1] - rs2[1]
         self.num = (rs1[0] * eGCD(rs2[0], self.ppow)[1][0]) % self.ppow
         return self
@@ -54,7 +70,18 @@ class PN:
             return self.setfrac(int(term.numerator()), int(term.denominator()))
         else:
             raise Exception("Type!")
+    
+    def __int__(self):
+        if self.deg >= self.acc:
+            return 0
+        elif self.deg >= 0:
+            return (self.num * (self.p ** self.deg)) % self.ppow
+        else:
+            return 0
+    
     def __str__(self):
+        if self.deg == math.inf:
+            return '0'
         if self.deg == 0:
             aux = ''
         elif self.deg == 1:
@@ -67,10 +94,14 @@ class PN:
         b = 'PN(' + str(self.p) + ', ' + str(self.acc)
         if self.deg == math.inf:
             return b + ').setint(0)'
-        elif self.deg >= 0:
-            return b + ').setint(' + str((self.num + (self.acc == 0)) * (self.p ** self.deg)) + ')'
+        elif self.deg == 0:
+            return b + ').setint(' + str(self.num + (self.acc == 0)) + ')'
+        elif self.deg == 1:
+            return b + ').setint(' + str(self.num + (self.acc == 0)) + ' * ' + str(self.p) + ')'
+        elif self.deg > 0:
+            return b + ').setint(' + str(self.num + (self.acc == 0)) + ' * ' + str(self.p) + '**' + str(self.deg) + ')'
         else:
-            return b + ').setfrac(' + str(self.num + (self.acc == 0)) + ', ' + str(self.p ** -self.deg) + ')'
+            return b + ').setfrac(' + str(self.num + (self.acc == 0)) + ', ' + str(self.p) + '**' + str(-self.deg) + ')'
     
     
     def __mul__(self, term):
@@ -79,7 +110,7 @@ class PN:
             outPN.deg = self.deg + term.deg
             outPN.num = (self.num * term.num) % outPN.ppow
         else:
-            rs = integer_to_p_adic(term, self.p)
+            rs = to_p_adic(term, self.p, self.acc)
             outPN = PN(self.p, self.acc)
             outPN.deg = self.deg + rs[1]
             outPN.num = (self.num * rs[0]) % outPN.ppow
@@ -94,7 +125,7 @@ class PN:
             outPN.deg = self.deg - term.deg
             outPN.num = (self.num * eGCD(term.num, self.ppow)[1][0]) % outPN.ppow
         else:
-            rs = integer_to_p_adic(term, self.p)
+            rs = to_p_adic(term, self.p, self.acc)
             outPN = PN(self.p, self.acc)
             outPN.deg = self.deg - rs[1]
             outPN.num = (self.num * eGCD(rs[0], self.ppow)[1][0]) % outPN.ppow
@@ -106,7 +137,7 @@ class PN:
             outPN.deg = term.deg - self.deg
             outPN.num = (term.num * eGCD(self.num, self.ppow)[1][0]) % self.ppow
         else:
-            rs = integer_to_p_adic(term, self.p)
+            rs = to_p_adic(term, self.p, self.acc)
             outPN = PN(self.p, self.acc)
             outPN.deg = - self.deg + rs[1]
             outPN.num = (rs[0] * eGCD(self.num, self.ppow)[1][0]) % self.ppow
@@ -119,7 +150,7 @@ class PN:
         return outPN
     
     def result_de_acr(self):
-        rs = integer_to_p_adic(self.num, self.p)
+        rs = int_to_p_adic(self.num, self.p)
         self.deg += rs[1]
         self.acc -= rs[1]
         self.ppow = self.p ** self.acc
@@ -155,7 +186,7 @@ class PN:
                 outPN.num += self.num * term.p ** (self.deg - term.deg)
                 outPN.result_de_acr()
         else:
-            rs = integer_to_p_adic(term, self.p)
+            rs = to_p_adic(term, self.p, self.acc)
             if self.deg <= rs[1]:
                 absac1 = self.deg + self.acc
                 if rs[1] >= absac1:
@@ -188,11 +219,28 @@ class PN:
     
     def __bool__(self):
         return self.deg != math.inf
+    
+    def __pow__(self, num):
+        num = int(num)
+        if num == 0:
+            return PN(self.p, self.acc).setint(1)
+        elif num == 1:
+            return self.copy()
+        elif num > 1:
+            if num % 2 == 0:
+                a = self ** (num / 2)
+                return a * a
+            else:
+                a = self ** ((num-1) / 2)
+                return a * a * self
+        elif num < 0:
+            a = 1 / self
+            return a ** (-num)
 
 if __name__ == "__main__":
     a = PN(3,5).setint(1)
     # a = 1
     print("started")
-    for _ in range(100000):
-        a += a
+    for _ in range(1):
+        a += 1
     print("finished")

@@ -171,37 +171,36 @@ class PFO:
     # Also we want to compute the transition matrices between different points numerically.
     
     # Get the coeff matrix of primtform
-    def primtform_list(self):
-        if self.primtlist == None:
-            outlst = []
-            for num in range(self.deg + 1):
-                c = self.primtform.coeff(t, num)
-                num2 = Z_DEG_BOUND
-                while (not c.coeff(z, num2)):
-                    num2 -= 1
-                outlst.append([c.coeff(z, num3) for num3 in range(num2 + 1)])
-            self.primtlist = outlst
-            return outlst
+    def primtform_list(self, inp=None, inacc=4):
+        if inp == None:
+            if self.primtlist == None:
+                outlst = []
+                for num in range(self.deg + 1):
+                    c = self.primtform.coeff(t, num)
+                    num2 = Z_DEG_BOUND
+                    while (not c.coeff(z, num2)):
+                        num2 -= 1
+                    outlst.append([c.coeff(z, num3) for num3 in range(num2 + 1)])
+                self.primtlist = (None, None, outlst)
+                return (None, None, outlst)
+            else:
+                return self.primtlist
         else:
-            return self.primtlist
+            if self.primtlistpadic == None or self.primtlistpadic[0] != inp or self.primtlistpadic[1] != inacc:
+                outlst = []
+                for num in range(self.deg + 1):
+                    c = self.primtform.coeff(t, num)
+                    num2 = Z_DEG_BOUND
+                    while not c.coeff(z, num2):
+                        num2 -= 1
+                    outlst.append([padic.PN(inp, inacc).setval(c.coeff(z, num3)) for num3 in range(num2 + 1)])
+                self.primtlistpadic = (inp, inacc, outlst)
+                return (inp, inacc, outlst)
+            else:
+                return self.primtlistpadic
     
-    def primtform_list_padic(self, inp, inacc):
-        if self.primtlistpadic == None or self.primtlistpadic[0] != inp or self.primtlistpadic[1] != inacc:
-            outlst = []
-            for num in range(self.deg + 1):
-                c = self.primtform.coeff(t, num)
-                num2 = Z_DEG_BOUND
-                while not c.coeff(z, num2):
-                    num2 -= 1
-                outlst.append([padic.PN(inp, inacc).setval(c.coeff(z, num3)) for num3 in range(num2 + 1)])
-            self.primtlistpadic = outlst
-            return (inp, inacc, outlst)
-        else:
-            return self.primtlistpadic
-    
-    
-    def hol_sol(self, inlst, termnum):
-        plist = self.primtform_list()
+    def hol_sol(self, inlst, termnum, inp=None, inacc=4):
+        plist = self.primtform_list(inp, inacc)[2]
         c = [0 for num in range(termnum)]
         outlst = []
         def mono_opr(deg, coeff):
@@ -233,41 +232,8 @@ class PFO:
                 mono_opr(num, newterm)
         return outlst
     
-    def hol_sol_padic(self, inlst, termnum, inp, inacc):
-        plist = self.primtform_list_padic(inp, inacc)[2]
-        c = [0 for num in range(termnum)]
-        outlst = []
-        def mono_opr(deg, coeff):
-            for num1 in range(self.deg + 1):
-                cdn = coeff * (deg ** num1)
-                if cdn :
-                    for num2 in range(len(plist[num1])):
-                        if deg + num2 < termnum:
-                            c[deg + num2] += plist[num1][num2] * cdn
-                        else:
-                            break
-        for num in range(termnum):
-            den = 0
-            for num1 in range(self.deg + 1):
-                den += plist[num1][0] * (num ** num1)
-            # print(den, c, outlst, not den, num)
-            if not den:
-                if num < len(inlst):
-                    outlst.append(inlst[num])
-                    mono_opr(num, inlst[num])
-                else:
-                    raise Exception("div 0")
-            else:
-                if type(den) == type(1):
-                    newterm = -c[num] * sympy.Rational(1, den)
-                else:
-                    newterm = -c[num] / den
-                outlst.append(newterm)
-                mono_opr(num, newterm)
-        return outlst
-    
-    def log_sol(self, inlst, termnum):
-        plist = self.primtform_list()
+    def log_sol(self, inlst, termnum, inp=None, inacc=4):
+        plist = self.primtform_list(inp, inacc)[2]
         c = [0 for num in range(termnum)]
         outlst = []
         def mono_opr(deg, coeff):
@@ -318,7 +284,7 @@ class PFO:
                 mono_opr(num, newterm)
         return outlst
     
-    def all_sol(self, termnum):
+    def all_sol(self, termnum, inp=None, inacc=4):
         soldict = dict()
         rootsdict = sympy.roots(self.localind, t)
         roots = rootsdict.keys()
@@ -330,12 +296,12 @@ class PFO:
             # Get the Holomorphic Solution
             initval = [0 for num in range(UPPERBOUND + 1)]
             initval[root] = 1
-            sollist = [self.hol_sol(initval, termnum)]
+            sollist = [self.hol_sol(initval, termnum, inp, inacc)]
             for logdeg in range(1, rootsdict[root]):
                 initval = [[0 for num in range(UPPERBOUND + 1)]]
                 for num in range(1, len(sollist) + 1):
                     initval.append(listdiv(sollist[-num], num))
-                sollist.append(self.log_sol(initval, termnum))
+                sollist.append(self.log_sol(initval, termnum, inp, inacc))
             soldict[root] = sollist
         return soldict
     
@@ -501,6 +467,6 @@ if __name__ == "__main__":
     a = padic.PN(3,5).setfrac(14,37)
     opr = PFO(TEST_PFO)
     # print(opr)
-    print(opr.hol_sol([1], 5))
-    print(opr.hol_sol_padic([1], 500, 13, 2))
+    print(opr.all_sol(5))
+    print(opr.all_sol(5, 11, 10))
     # print(opr.instanton(5, pr=True))
