@@ -3,7 +3,7 @@ Picard-Fuchs Operator Tool by cybcat
 
 We only deal with PF Operator in polynomial of z, d = d/dz and t = z * d/dz.
 '''
-
+import padic
 import sympy
 import fractions
 
@@ -55,7 +55,7 @@ def d_power_inv_list(n):
 def to_d_form(ineqn):
     ineqn = sympy.expand(ineqn)
     t_deg = DEG_BOUND
-    while (ineqn.coeff(t, t_deg) == 0) and (t_deg > -1):
+    while (not ineqn.coeff(t, t_deg)) and (t_deg > -1):
         t_deg -= 1
     lst = t_power_to_d_list(t_deg)
     outeqn = 0
@@ -66,7 +66,7 @@ def to_d_form(ineqn):
 def to_t_form(ineqn):
     ineqn = sympy.expand(ineqn)
     d_deg = DEG_BOUND
-    while (ineqn.coeff(d, d_deg) == 0) and (d_deg > -1):
+    while (not ineqn.coeff(d, d_deg)) and (d_deg > -1):
         d_deg -= 1
     lst = d_power_to_t_list(d_deg)
     outeqn = 0
@@ -89,34 +89,7 @@ def to_primitive(ineqn, var, deg):
     for num in range(1, deg + 1):
         gcd = sympy.gcd(gcd, ineqn.coeff(var, num))
     return sympy.expand(sympy.cancel(ineqn / gcd))
-
-def integer_to_p_adic(inint, inprime):
-    outtuple = (inint, 0)
-    while True:
-        rs = divmod(outtuple[0], inprime)
-        if rs[1]:
-            return outtuple
-        else:
-            outtuple = (rs[0], outtuple[1] + 1)
-            
-def eGCD(a, b):
-    prevx, x = 1, 0
-    prevy, y = 0, 1
-    while b:
-        rs = divmod(a, b)
-        x, prevx = prevx - rs[0]*x, x
-        y, prevy = prevy - rs[0]*y, y
-        a, b = b, rs[1]
-    if a >= 0:
-        return a, (prevx, prevy)
-    else:
-        return -a, (-prevx, -prevy)
-
-# The p-adic number Class
-class PN:
-    def __init__(self, innum, inprime, indeg):
-        pass
-
+    
 # The Picard Fuchs Operator Class
 class PFO:
     def __init__(self, ineqn, pr=False):
@@ -140,7 +113,7 @@ class PFO:
         
         # Degree
         self.deg = DEG_BOUND
-        while (self.dform.coeff(d, self.deg) == 0) and (self.deg > -1):
+        while (not self.dform.coeff(d, self.deg)) and (self.deg > -1):
             self.deg -= 1
         
         # Primitive Forms
@@ -158,6 +131,7 @@ class PFO:
         self.localexp = None
         # Primitive t-form List
         self.primtlist = None
+        self.primtlistpadic = None
         
         if pr:
             print("Operator Constructed!")
@@ -203,13 +177,28 @@ class PFO:
             for num in range(self.deg + 1):
                 c = self.primtform.coeff(t, num)
                 num2 = Z_DEG_BOUND
-                while c.coeff(z, num2) == 0:
+                while (not c.coeff(z, num2)):
                     num2 -= 1
                 outlst.append([c.coeff(z, num3) for num3 in range(num2 + 1)])
             self.primtlist = outlst
             return outlst
         else:
             return self.primtlist
+    
+    def primtform_list_padic(self, inp, inacc):
+        if self.primtlistpadic == None or self.primtlistpadic[0] != inp or self.primtlistpadic[1] != inacc:
+            outlst = []
+            for num in range(self.deg + 1):
+                c = self.primtform.coeff(t, num)
+                num2 = Z_DEG_BOUND
+                while not c.coeff(z, num2):
+                    num2 -= 1
+                outlst.append([padic.PN(inp, inacc).setval(c.coeff(z, num3)) for num3 in range(num2 + 1)])
+            self.primtlistpadic = outlst
+            return (inp, inacc, outlst)
+        else:
+            return self.primtlistpadic
+    
     
     def hol_sol(self, inlst, termnum):
         plist = self.primtform_list()
@@ -218,7 +207,7 @@ class PFO:
         def mono_opr(deg, coeff):
             for num1 in range(self.deg + 1):
                 cdn = coeff * (deg ** num1)
-                if cdn != 0:
+                if cdn:
                     for num2 in range(len(plist[num1])):
                         if deg + num2 < termnum:
                             c[deg + num2] += plist[num1][num2] * cdn
@@ -228,8 +217,41 @@ class PFO:
             den = 0
             for num1 in range(self.deg + 1):
                 den += plist[num1][0] * (num ** num1)
-            # print(den, c, outlst, den == 0, num)
-            if den == 0:
+            # print(den, c, outlst, not den, num)
+            if not den:
+                if num < len(inlst):
+                    outlst.append(inlst[num])
+                    mono_opr(num, inlst[num])
+                else:
+                    raise Exception("div 0")
+            else:
+                if type(den) == type(1):
+                    newterm = -c[num] * sympy.Rational(1, den)
+                else:
+                    newterm = -c[num] / den
+                outlst.append(newterm)
+                mono_opr(num, newterm)
+        return outlst
+    
+    def hol_sol_padic(self, inlst, termnum, inp, inacc):
+        plist = self.primtform_list_padic(inp, inacc)[2]
+        c = [0 for num in range(termnum)]
+        outlst = []
+        def mono_opr(deg, coeff):
+            for num1 in range(self.deg + 1):
+                cdn = coeff * (deg ** num1)
+                if cdn :
+                    for num2 in range(len(plist[num1])):
+                        if deg + num2 < termnum:
+                            c[deg + num2] += plist[num1][num2] * cdn
+                        else:
+                            break
+        for num in range(termnum):
+            den = 0
+            for num1 in range(self.deg + 1):
+                den += plist[num1][0] * (num ** num1)
+            # print(den, c, outlst, not den, num)
+            if not den:
                 if num < len(inlst):
                     outlst.append(inlst[num])
                     mono_opr(num, inlst[num])
@@ -251,7 +273,7 @@ class PFO:
         def mono_opr(deg, coeff):
             for num1 in range(self.deg + 1):
                 cdn = coeff * (deg ** num1)
-                if cdn != 0:
+                if cdn :
                     for num2 in range(len(plist[num1])):
                         if deg + num2 < termnum:
                             c[deg + num2] += plist[num1][num2] * cdn
@@ -259,13 +281,13 @@ class PFO:
                             break
         def log_mono_opr(deg, logdeg, coeff):
             for num1 in range(self.deg + 1):
-                if (deg != 0) or (num1 >= logdeg):
+                if (deg ) or (num1 >= logdeg):
                     cdn = coeff * (deg ** (num1 - logdeg))
                     for num2 in range(num1, num1-logdeg, -1):
                         cdn *= num2
                 else:
                     cdn = 0
-                if cdn != 0:
+                if cdn :
                     for num2 in range(len(plist[num1])):
                         if deg + num2 < termnum:
                             c[deg + num2] += cdn * plist[num1][num2]
@@ -281,7 +303,7 @@ class PFO:
             den = 0
             for num1 in range(self.deg + 1):
                 den += plist[num1][0] * (num ** num1)
-            if den == 0:
+            if not den:
                 if num < len(inlst[0]):
                     outlst.append(inlst[0][num])
                     mono_opr(num, inlst[0][num])
@@ -318,7 +340,7 @@ class PFO:
         return soldict
     
     def isMUM(self):
-        return sympy.expand(self.localind - t ** self.deg) == 0
+        return not sympy.expand(self.localind - t ** self.deg)
     
     # [q(x)=e^(log_sol/hol_sol), x(q)]
     def qcoord(self, termnum, pr=False):
@@ -476,7 +498,9 @@ class PFO:
         return outlst
         
 if __name__ == "__main__":
+    a = padic.PN(3,5).setfrac(14,37)
     opr = PFO(TEST_PFO)
-    print(opr)
-    print(opr.all_sol(5))
-    print(opr.instanton(5, pr=True))
+    # print(opr)
+    print(opr.hol_sol([1], 5))
+    print(opr.hol_sol_padic([1], 500, 13, 2))
+    # print(opr.instanton(5, pr=True))

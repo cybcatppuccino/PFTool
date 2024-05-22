@@ -37,6 +37,15 @@ def integer_to_p_adic(inint, inprime):
         else:
             outtuple = (rs[0], outtuple[1] + 1)
 
+class Tes:
+    def __init__(self):
+        pass
+    def __add__(self, obj):
+        print("add", type(obj))
+    def __radd__(self, obj):
+        print("radd", type(obj))
+a = Tes()
+
 s = 2**15 * 3**22
 print("Come")
 for _ in range(10000):
