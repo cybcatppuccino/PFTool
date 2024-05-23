@@ -113,10 +113,24 @@ def print_all_AESZ():
 if __name__ == '__main__':
     
     # a = AESZ(465)
-    a = AESZ(1)
+    a = AESZ(175)
     ap = a.pfo
-    print(a)
-    print(ap.yukawa(30, pr=True))
+    print(a.pfo.translation_inf().localind)
+    print("Start")
+    s = ap.all_sol(500)[0]
+    for _ in range(471):
+        if padic.int_to_p_adic(s[0][_+29]-s[0][_], 29)[1] == 4:
+            print(_)
+            break
+    for _ in range(477):
+        if padic.int_to_p_adic(s[0][_+23]-s[0][_], 23)[1] == 4:
+            print(_)
+            break
+    for _ in range(481):
+        if padic.int_to_p_adic(s[0][_+19]-s[0][_], 19)[1] == 4:
+            print(_)
+            break
+    print("Over")
     
     '''
     print(ap.all_sol(8))

@@ -247,8 +247,8 @@ class PFO:
                             break
         def log_mono_opr(deg, logdeg, coeff):
             for num1 in range(self.deg + 1):
-                if (deg ) or (num1 >= logdeg):
-                    cdn = coeff * (deg ** (num1 - logdeg))
+                if (deg) or (num1 >= logdeg):
+                    cdn = coeff * (sympy.Integer(deg) ** (num1 - logdeg))
                     for num2 in range(num1, num1-logdeg, -1):
                         cdn *= num2
                 else:
@@ -464,9 +464,12 @@ class PFO:
         return outlst
         
 if __name__ == "__main__":
-    a = padic.PN(3,5).setfrac(14,37)
+    # a = padic.PN(3,5).setfrac(14,37)
     opr = PFO(TEST_PFO)
     # print(opr)
-    print(opr.all_sol(5))
-    print(opr.all_sol(5, 11, 10))
+    # print("OK")
+    # opr.all_sol(1000)
+    # print("Done1")
+    # s = opr.all_sol(300, 101)[0]
+    # print("Done2")
     # print(opr.instanton(5, pr=True))
