@@ -1,6 +1,17 @@
 from PFTool import *
 from AESZ import *
 from sympy import *
+from numba import njit
+
+import numpy as np
+
+n = np.array([1,2,3], dtype=)
+@jit
+def foo(a, n0):
+    for _ in range(a):
+        n0[0] *= 2
+    return n0
+
 
 z = Symbol('z')
 '''
@@ -15,6 +26,7 @@ q = (84 * z + 58 *z + 14 *z**2 + 80 *z**3 + 74 *z**4 + 97 *z**5 + 83 *z**6 + 76 
  77 *z**22 + 84 *z**23 + 45 *z**24 + 55 *z**25 + 81 *z**26 + 90 *z**27 + 
  35 *z**28 + 8 *z**29 + 15 *z**30)
 '''
+@njit
 def eGCD(a, b):
     prevx, x = 1, 0
     prevy, y = 0, 1
@@ -48,6 +60,6 @@ a = Tes()
 
 s = 2**15 * 3**22
 print("Come")
-for _ in range(10000):
+for _ in range(100):
     eGCD(216516513,411313182)
 print("Done")

@@ -1,5 +1,6 @@
 import sympy, pickle
 from PFTool import *
+from time import time
 
 def get_raw_info(num):
     f = open( '.\\info\\' + str(num) + '.txt', 'r', encoding = 'utf-8' )
@@ -113,24 +114,23 @@ def print_all_AESZ():
 if __name__ == '__main__':
     
     # a = AESZ(465)
-    a = AESZ(175)
+    a = AESZ(46)
     ap = a.pfo
     print(a.pfo.translation_inf().localind)
+    time1 = time()
     print("Start")
-    s = ap.all_sol(500)[0]
-    for _ in range(471):
-        if padic.int_to_p_adic(s[0][_+29]-s[0][_], 29)[1] == 4:
-            print(_)
-            break
-    for _ in range(477):
-        if padic.int_to_p_adic(s[0][_+23]-s[0][_], 23)[1] == 4:
-            print(_)
-            break
-    for _ in range(481):
-        if padic.int_to_p_adic(s[0][_+19]-s[0][_], 19)[1] == 4:
-            print(_)
-            break
-    print("Over")
+    s = ap.all_sol(300)[0]
+    time2 = time()
+    print(time2 - time1)
+    sp = ap.all_sol(150, 23, 15)[0]
+    st = ''
+    st2 = ''
+    for _ in range(150):
+        st += str(padic.to_p_adic(s[3][_], 23, 0)[1])
+        if type(sp[0][_]) == type(padic.PN(0,0)):
+            st2 += str(hex(sp[0][_].acc)[-1])
+    print(st)
+    print(st2)
     
     '''
     print(ap.all_sol(8))

@@ -6,6 +6,8 @@ We only deal with PF Operator in polynomial of z, d = d/dz and t = z * d/dz.
 import padic
 import sympy
 import fractions
+from numba import jit
+import numpy as np
 
 # The Symbols
 # z: the variable of the ODE
@@ -198,6 +200,8 @@ class PFO:
                 return (inp, inacc, outlst)
             else:
                 return self.primtlistpadic
+            
+    
     
     def hol_sol(self, inlst, termnum, inp=None, inacc=4):
         plist = self.primtform_list(inp, inacc)[2]

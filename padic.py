@@ -1,6 +1,20 @@
 import math
 import sympy
 import fractions
+from numba import jit, njit
+import numba
+
+def foo(a, b):
+    for _ in range(1000000):
+        fractions.Fraction(a, b) + 1
+    return fractions.Fraction(a, b) + 1
+
+
+def foo2(a, b):
+    for _ in range(1000000):
+        fractions.Fraction(a, b) + 1
+    return fractions.Fraction(a, b) + 1
+
 
 def int_to_p_adic(inint, inprime):
     if not inint:
@@ -119,6 +133,7 @@ class PN:
     def __rmul__(self, term):
         return self * term
     
+    
     def __truediv__(self, term):
         if type(term) == type(self):
             outPN = PN(self.p, min(self.acc, term.acc))
@@ -130,6 +145,7 @@ class PN:
             outPN.deg = self.deg - rs[1]
             outPN.num = (self.num * eGCD(rs[0], self.ppow)[1][0]) % outPN.ppow
         return outPN
+    
     
     def __rtruediv__(self, term):
         if type(term) == type(self):
@@ -155,7 +171,8 @@ class PN:
         self.acc -= rs[1]
         self.ppow = self.p ** self.acc
         self.num = rs[0] % self.ppow
-        
+    
+    
     def self_de_acr(self, absacr):
         self.acc = absacr - self.deg
         self.ppow = self.p ** self.acc
@@ -220,6 +237,7 @@ class PN:
     def __bool__(self):
         return self.deg != math.inf
     
+    
     def __pow__(self, num):
         num = int(num)
         if num == 0:
@@ -237,10 +255,22 @@ class PN:
             a = 1 / self
             return a ** (-num)
 
+def Teichmuller(a, p, n):
+    a = a % p
+    if a == 1:
+        return PN(p, n).setint(1)
+    elif a == p-1:
+        return PN(p, n).setint(-1)
+    else:
+        outPN = PN(p, n).setint(a)
+        for _ in range(n - 1):
+            outPN **= p
+        return outPN
+
 if __name__ == "__main__":
     a = PN(3,5).setint(1)
     # a = 1
     print("started")
-    for _ in range(1):
-        a += 1
+    for _ in range(100000):
+        a += a
     print("finished")
