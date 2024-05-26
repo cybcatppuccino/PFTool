@@ -124,5 +124,4 @@ od;;
 return sollist;;
 end;;
 
-
 all_sol(10);
