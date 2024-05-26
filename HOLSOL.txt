@@ -1,0 +1,53 @@
+plist := [[0, -120], [0, -1250], [0, -4375], [0, -6250], [1, -3125]];;
+selfdeg := 4;;
+
+clist := [];;
+outlst := [];;
+cdn := 0;;
+den := 0;;
+newterm := 0;;
+
+mono_opr := function(deg, coeff, termnum)
+	for num1 in [0 .. selfdeg] do
+	cdn := coeff * deg^num1;;
+	if cdn <> 0 then
+		for num2 in [0 .. Length(plist[num1+1]) - 1] do
+		if deg + num2 < termnum then
+			clist[deg+num2+1] := clist[deg+num2+1] + plist[num1+1][num2+1] * cdn;;
+		else
+			break;;
+		fi;;
+		od;;
+	fi;;
+	od;;
+end;;
+
+hol_sol := function(inlst, termnum)
+
+clist := List([1..termnum], num->0);;
+outlst := [];;
+
+for num in [0 .. termnum - 1] do
+	den := 0;;
+	for num1 in [0 .. selfdeg] do
+	den := den + plist[num1+1][1] * num^num1;;
+	od;;
+	
+	if den = 0 then
+		if num < Length(inlst) then
+			Add(outlst, inlst[num+1]);;
+			mono_opr(num, inlst[num+1], termnum);;
+		else
+			Print(1/0);;
+		fi;;
+	else
+		newterm := -clist[num+1] / den;;
+		Add(outlst, newterm);;
+		mono_opr(num, newterm, termnum);;
+	fi;;
+od;;
+
+return outlst;
+end;;
+
+hol_sol([1], 10);
