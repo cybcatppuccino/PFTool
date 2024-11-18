@@ -269,8 +269,3 @@ def Teichmuller(a, p, n):
 
 if __name__ == "__main__":
     a = PN(3,5).setint(1)
-    # a = 1
-    print("started")
-    for _ in range(100000):
-        a += a
-    print("finished")
