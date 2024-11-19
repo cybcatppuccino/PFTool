@@ -1,0 +1,7 @@
+the point z*=-1/64 of AESZ36 (2.13)
+the point z*=-1/80 of AESZ49 (2.28)
+the point z*=-1/16 of AESZ84 (2.63)
+the point z*=-1/768 of AESZ111 (2.17)
+the point z*=-1/64 of AESZ? (2.70) (equiv to AESZ255)
+the point z*=-1/16384 of AESZ277 (4.56)
+the point z*=-1/36 of AESZ？ (4.31)
