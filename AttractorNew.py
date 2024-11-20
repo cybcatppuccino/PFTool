@@ -5,22 +5,6 @@ import sympy
 
 sys.set_int_max_str_digits(100000)
 
-'''
-Attractor Point
-
-z* = -1/64
-
-level N = ?
-conifold pt = 1/2^8 = 1/256
-mirror M = ?
-
-kappa = ?
-c2.D = ?
-Euler chi(M) = ?
-
-AESZ: (292, '', '2.70', 'Operator equivalent to (:aesz 255)')
-'''
-
 X = AESZ.AESZ(292)
 op = X.pfo
 print(op)
@@ -41,4 +25,4 @@ solinfo = solinfo.replace('[', '{')
 solinfo = solinfo.replace(']', '}')
 
 with open('solinnew.txt', 'w') as f:
-    f.write('sol=' + str(solinfo) + '; z0=-1/192;')
+    f.write('sol=' + str(solinfo) + '; z0=-1/1296;')

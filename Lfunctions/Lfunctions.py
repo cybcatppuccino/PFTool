@@ -1,7 +1,7 @@
 from LfunctionsL2L4get import L2 as L2
 from LfunctionsL2L4get import L4 as L4
 
-THE_BOUND = 10000
+THE_BOUND = 2000
 
 def continued_fraction(r, error=1e-7, d=20):
     r1 = r - int(r)
@@ -74,19 +74,23 @@ def alltest(inval, bound=THE_BOUND, error=1e-7, d=20):
 def alltest2(inval, bound=THE_BOUND, error=1e-7, d=20):
     pi = 3.14159265358979323846264338
     zeta3 = 1.20205690315959428539973
-    return alltest(inval, bound, error, d)+alltest(inval*pi, bound, error, d)+alltest(inval*(pi**2), bound, error, d)+alltest(inval*(pi**3), bound, error, d)+alltest(inval*zeta3, bound, error, d)
+    return   alltest(inval, bound, error, d)\
+            +alltest(inval*pi, bound, error, d)\
+            +alltest(inval*(pi**2), bound, error, d)\
+            +alltest(inval*(pi**3), bound, error, d)\
+            +alltest(1/inval, bound, error, d)\
+            +alltest(pi/inval, bound, error, d)\
+            +alltest((pi**2)/inval, bound, error, d)\
+            +alltest((pi**3)/inval, bound, error, d)
+def testlist(inlst, bound=THE_BOUND, error=1e-7, d=20):
+    return [alltest2(num, bound, error, d) for num in inlst]
 
 if __name__ == '__main__':
-    tl = [1.4325537363690496706,
-    0.81107556076091088463,
-    -0.82150213771575534351,
-    0.19370796305064679945]
+    tl = [-11.054835954699885689, 14.992300192559700866, 
+        -6.0093536649054504750, 0.91142256061883843065, 
+        56.519640174430078546, -18.878941326489863311, 2.8633184207561408108,1.4325537363690496706, 0.81107556076091088463, 
+        -0.82150213771575534351, 0.19370796305064679945, 
+        4.5501232557012492971, -2.5808250807561275957, 0.60855151366175509889
+    ]
 
-    print(alltest2(tl[0]))
-    print(alltest2(tl[1]))
-    print(alltest2(tl[2]))
-    print(alltest2(tl[3]))
-    print(alltest2(1.4780203895125552419))
-    print(alltest2(1.6180572375999716608))
-    print(alltest2(-1.1868969111290801888))
-    print(alltest2(0.24591521177202073426))
+    print(testlist(tl))
