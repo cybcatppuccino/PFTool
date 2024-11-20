@@ -1,0 +1,79 @@
+from LfunctionsL2L4get import L2 as L2
+from LfunctionsL2L4get import L4 as L4
+
+def continued_fraction(r, error=1e-7, d=20):
+    r1 = r - int(r)
+    if d == 0:
+        return []
+    else:
+        if r1 < error:
+            return [int(r)]
+        else:
+            return [int(r)] + continued_fraction(1/r1, error, d-1)
+
+def from_continued_fraction(inlst):
+    if len(inlst) == 1:
+        return inlst[0], 1
+    else:
+        rs = from_continued_fraction(inlst[1:])
+        return inlst[0] * rs[0] + rs[1], rs[0]
+
+def isrational(r, bound=65536, error=1e-7, d=20):
+    if r < 0:
+        tp = isrational(-r, bound)
+        return (-tp[0], tp[1])
+    if r == 0:
+        return (0, 1)
+    else:
+        rs = from_continued_fraction(continued_fraction(r, error, d))
+        if rs[0] + rs[1] > bound:
+            return 0, 0
+        else:
+            return rs
+        
+def testL21(inval, bound=65536, error=1e-7, d=20):
+    if inval == 0:
+        return []
+    else:
+        outlst = []
+        for Lf in L2:
+            if abs(Lf[3]) > 1e-12:
+                isr = isrational(inval / Lf[3], bound, error, d)
+                if isr[1] != 0:
+                    outlst.append((Lf, isr))
+        return outlst
+
+def testL41(inval, bound=65536, error=1e-7, d=20):
+    if inval == 0:
+        return []
+    else:
+        outlst = []
+        for Lf in L4:
+            if abs(Lf[3]) > 1e-12:
+                isr = isrational(inval / Lf[3], bound, error, d)
+                if isr[1] != 0:
+                    outlst.append((Lf, isr))
+        return outlst
+    
+def testL42(inval, bound=65536, error=1e-7, d=20):
+    if inval == 0:
+        return []
+    else:
+        outlst = []
+        for Lf in L4:
+            if abs(Lf[4]) > 1e-12:
+                isr = isrational(inval / Lf[4], bound, error, d)
+                if isr[1] != 0:
+                    outlst.append((Lf, isr))
+        return outlst
+
+def alltest(inval, bound=65536, error=1e-7, d=20):
+    return (testL21(inval, bound, error, d), testL41(inval, bound, error, d), testL42(inval, bound, error, d))
+def alltest2(inval, bound=65536, error=1e-7, d=20):
+    pi = 3.14159265358979323846264338
+    zeta3 = 1.20205690315959428539973
+    return alltest(inval, bound, error, d)+alltest(inval*pi, bound, error, d)+alltest(inval*(pi**2), bound, error, d)+alltest(inval*(pi**3), bound, error, d)+alltest(inval*zeta3, bound, error, d)
+
+if __name__ == '__main__':
+    print(alltest2(-6.4239746373842026385))
+    print(alltest2(0.94582283075188833358))
