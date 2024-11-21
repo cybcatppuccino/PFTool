@@ -8,6 +8,15 @@ def get_raw_info(num):
     f.close()
     return outstr
 
+def find_something(intxt):
+    numlst = []
+    for _ in range(1, 552):
+        f = open( '.\\info\\' + str(_) + '.txt', 'r', encoding = 'utf-8' )
+        if str(intxt) in str(f.read()):
+            numlst.append(_)
+        f.close()
+    return numlst
+
 TESTSTR = get_raw_info(1)
 # Equation List Information: 
 def get_info_from_num(num):
