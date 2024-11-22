@@ -6,7 +6,7 @@ We only deal with PF Operator in polynomial of z, d = d/dz and t = z * d/dz.
 import padic
 import sympy
 import mpmath
-mpmath.mp.dps = 100
+mpmath.mp.dps = 64
 from numba import njit
 import numpy as np
 import sys
@@ -23,8 +23,8 @@ t = sympy.Symbol('t')
 
 DEG_BOUND = 30
 Z_DEG_BOUND = 150
-# TEST_PFO = -3125*d**4*z**5 + d**4*z**4 - 25000*d**3*z**4 + 6*d**3*z**3 - 45000*d**2*z**3 + 7*d**2*z**2 - 15000*d*z**2 + d*z - 120*z
-TEST_PFO = "65536*t**4*z**2 - 512*t**4*z + t**4 + 262144*t**3*z**2 - 1024*t**3*z + 360448*t**2*z**2 - 832*t**2*z + 196608*t*z**2 - 320*t*z + 36864*z**2 - 48*z"
+TEST_PFO = "z * (-3125*d**4*z**5 + d**4*z**4 - 25000*d**3*z**4 + 6*d**3*z**3 - 45000*d**2*z**3 + 7*d**2*z**2 - 15000*d*z**2 + d*z - 120*z)"
+TEST_PFO2 = "65536*t**4*z**2 - 512*t**4*z + t**4 + 262144*t**3*z**2 - 1024*t**3*z + 360448*t**2*z**2 - 832*t**2*z + 196608*t*z**2 - 320*t*z + 36864*z**2 - 48*z"
 LEG = "z * (z-1) * d^2 + (2*z - 1) * d + 1/4"
 
 
@@ -96,7 +96,7 @@ def to_primitive(ineqn, var, deg):
     return sympy.expand(sympy.cancel(ineqn / gcd))
 
 def toc(innum):
-    if str(type(mpmath.mpf(2)))[8:14] == "mpmath":
+    if str(type(innum))[8:14] == "mpmath":
         return mpmath.mpc(innum)
     else:
         return mpmath.mpf(sympy.re(innum)) + mpmath.mpf(sympy.im(innum)) * mpmath.j
@@ -116,6 +116,36 @@ def wrval(inlst, diff, pt):
         if diffnum < diff:
             inlstcopy = dlist(inlstcopy)
     return outlst
+
+def mptomma(inm):
+    outstr = '{'
+    for num in range(inm.rows):
+        outstr += '{'
+        for num2 in range(inm.cols):
+            outstr += str(inm[num, num2])
+            if num2 < inm.cols - 1:
+                outstr += ','
+        if num < inm.rows - 1:
+            outstr += '},'
+        else:
+            outstr += '}'
+    outstr += '}'
+    return outstr.replace('j', 'I').replace('.0 ', ' ').replace('.0I', 'I')
+
+STANDWR = mpmath.matrix([[toc(int(num1 == num2) * sympy.factorial(num1))
+                     for num1 in range(4)] for num2 in range(4)])
+
+def hololist(inpfo, zlist, termnum, pr=False):
+    if pr:
+        print(inpfo)
+        print(zlist)
+    outmatrix = mpmath.eye(4)
+    for num in range(len(zlist) - 1):
+        newpfo = inpfo.translation(zlist[num])
+        outmatrix = newpfo.CY_trans_holbasis(termnum, toc(zlist[num + 1]-zlist[num])) * outmatrix
+        if pr:
+            print(num)
+    return outmatrix
 
 # The Picard Fuchs Operator Class
 class PFO:
@@ -451,7 +481,10 @@ class PFO:
             return soldict
         else:
             return self.mpallsol[1]
-        
+    
+    def isMUM(self):
+        return not sympy.expand(self.localind - t ** self.deg)
+
     def eval_MUM(self, termnum, pt):
         soldict = self.mp_all_sol(termnum)
         logpt = mpmath.log(toc(pt))
@@ -493,10 +526,25 @@ class PFO:
         r31 =  (1/(6*pt))*(6*f2[0] + logpt*(6*f1[0] + logpt*(3*f0[0] + logpt*pt*f0[1] + 3*pt*f1[1]) + 6*pt*f2[1])) + f3[1]
         r32 = (1/(6*pt**2))*(-3*(-2 + logpt)*logpt*f0[0] - 6*(-1 + logpt)*f1[0] - 6*f2[0] + pt*(12*f2[1] + logpt*(12*f1[1] + logpt*(6*f0[1] + logpt*pt*f0[2] + 3*pt*f1[2]) + 6*pt*f2[2]) + 6*pt*f3[2]))
         r33 = (1/(6*pt**3))*(6*(1 + (-3 + logpt)*logpt)*f0[0] + 6*(-3 + 2*logpt)*f1[0] + 12*f2[0] + pt*(-9*(-2 + logpt)*logpt*f0[1] - 18*(-1 + logpt)*f1[1] - 18*f2[1] + pt*(18*f2[2] + logpt*(18*f1[2] + logpt*(9*f0[2] + logpt*pt*f0[3] + 3*pt*f1[3]) + 6*pt*f2[3]) + 6*pt*f3[3])))
-        return [[r00,r01,r02,r03],[r10,r11,r12,r13],[r20,r21,r22,r23],[r30,r31,r32,r33]]
+        return mpmath.matrix([[r00,r01,r02,r03],[r10,r11,r12,r13],[r20,r21,r22,r23],[r30,r31,r32,r33]])
     
-    def Wronskian_MUM_MMA(self, termnum, pt):
-        wrsk = self.Wronskian_MUM(termnum, pt)
+    def Wronskian_General(self, termnum, pt):
+        pt = toc(pt)
+        soldict = self.mp_all_sol(termnum)
+        f0 = wrval(soldict[0][0], 3, pt)
+        f1 = wrval(soldict[1][0], 3, pt)
+        f2 = wrval(soldict[2][0], 3, pt)
+        f3 = wrval(soldict[3][0], 3, pt)
+        return mpmath.matrix([f0, f1, f2, f3])
+    
+    def Wronskian0(self, termnum, pt):
+        if self.isMUM():
+            return self.Wronskian_MUM(termnum, pt)
+        else:
+            return self.Wronskian_General(termnum, pt)
+
+    def Wronskian0_MMA(self, termnum, pt):
+        wrsk = self.Wronskian0(termnum, pt)
         outstr = '{'
         for num in range(5):
             if num == 0:
@@ -505,7 +553,7 @@ class PFO:
                 mult = (2 * mpmath.pi * mpmath.j) ** (4-num)
             outstr += '{'
             for num2 in range(4):
-                outstr += str(wrsk[num-(num>0)][num2]*mult)
+                outstr += str(wrsk[num-(num>0), num2]*mult)
                 if num2 < 3:
                     outstr += ','
             if num < 4:
@@ -513,11 +561,7 @@ class PFO:
             else:
                 outstr += '}'
         outstr += '}'
-        return outstr.replace('j', 'I')
-
-
-    def isMUM(self):
-        return not sympy.expand(self.localind - t ** self.deg)
+        return outstr.replace('j', 'I').replace('.0 ', ' ').replace('.0I', 'I')
     
     # [q(x)=e^(log_sol/hol_sol), x(q)]
     def qcoord(self, termnum, pr=False):
@@ -673,12 +717,41 @@ class PFO:
                     yk[num2 * num] -= yk[num]
         
         return outlst
+    
+    def CY_trans_holbasis(self, termnum, znew):
+        # newbasis [p0', p1', p2', p3'] = A . oldbasis [p0, p1, p2, p3]
+        # using Wronskian computations
+        
+        # znew need to be small to maintain convergence
+        # termnum >= 4
+        return STANDWR * (self.Wronskian0(termnum, znew) ** -1)
         
 if __name__ == "__main__":
-    opr = PFO(TEST_PFO)
+    '''
+    opr = PFO(TEST_PFO2)
     z0 = sympy.Integer(-1)/768
     print("Start!")
-    opr.mp_all_sol(2000)
+    opr.mp_all_sol(1000)
     print("Finish!")
+    print(STANDWR)
     print(opr.attrval_MUM(1000, z0))
-    print(opr.Wronskian_MUM_MMA(1000, z0))
+    print(mptomma(opr.CY_trans_holbasis(1000, z0)))
+    '''
+
+    b = PFO(TEST_PFO)
+    thez = (1 - sympy.I) / 2
+    thezlist = [thez]
+    for _ in range(10):
+        thez += sympy.I / 10
+        thezlist.append(thez)
+    for _ in range(10):
+        thez += -sympy.Integer(1) / 10
+        thezlist.append(thez)
+    for _ in range(10):
+        thez += -sympy.I / 10
+        thezlist.append(thez)
+    for _ in range(10):
+        thez += sympy.Integer(1) / 10
+        thezlist.append(thez)
+    print(mptomma(hololist(b, thezlist, 100, True)))
+    
