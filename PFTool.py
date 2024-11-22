@@ -6,7 +6,7 @@ We only deal with PF Operator in polynomial of z, d = d/dz and t = z * d/dz.
 import padic
 import sympy
 import mpmath
-mpmath.mp.dps = 200
+mpmath.mp.dps = 100
 from numba import njit
 import numpy as np
 import sys
@@ -24,7 +24,7 @@ t = sympy.Symbol('t')
 DEG_BOUND = 30
 Z_DEG_BOUND = 150
 # TEST_PFO = -3125*d**4*z**5 + d**4*z**4 - 25000*d**3*z**4 + 6*d**3*z**3 - 45000*d**2*z**3 + 7*d**2*z**2 - 15000*d*z**2 + d*z - 120*z
-TEST_PFO = "z * (-3125*d**4*z**5 + d**4*z**4 - 25000*d**3*z**6 + 6*d**3*z**3 - 45000*d**2*z**3 + 7*d**2*z**2 - 15000*d*z**4 + d*z - 120*z)"
+TEST_PFO = "65536*t**4*z**2 - 512*t**4*z + t**4 + 262144*t**3*z**2 - 1024*t**3*z + 360448*t**2*z**2 - 832*t**2*z + 196608*t*z**2 - 320*t*z + 36864*z**2 - 48*z"
 LEG = "z * (z-1) * d^2 + (2*z - 1) * d + 1/4"
 
 
@@ -96,7 +96,26 @@ def to_primitive(ineqn, var, deg):
     return sympy.expand(sympy.cancel(ineqn / gcd))
 
 def toc(innum):
-    return mpmath.mpf(sympy.re(innum)) + mpmath.mpf(sympy.im(innum)) * mpmath.j
+    if str(type(mpmath.mpf(2)))[8:14] == "mpmath":
+        return mpmath.mpc(innum)
+    else:
+        return mpmath.mpf(sympy.re(innum)) + mpmath.mpf(sympy.im(innum)) * mpmath.j
+
+def dlist(inlst):
+    return [inlst[num] * num for num in range(1, len(inlst))]
+
+def polyval(inlst, pt):
+    return mpmath.polyval(list(reversed(inlst)), toc(pt))
+
+def wrval(inlst, diff, pt):
+    outlst = []
+    inlstcopy = inlst.copy()
+    pt0 = toc(pt)
+    for diffnum in range(diff + 1):
+        outlst.append(mpmath.polyval(list(reversed(inlstcopy)), pt0))
+        if diffnum < diff:
+            inlstcopy = dlist(inlstcopy)
+    return outlst
 
 # The Picard Fuchs Operator Class
 class PFO:
@@ -141,6 +160,7 @@ class PFO:
         self.primtlist = None
         self.mpprimtlist = None
         self.primtlistpadic = None
+        self.mpallsol = None
         
         if pr:
             print("Operator Constructed!")
@@ -408,26 +428,94 @@ class PFO:
         return soldict
     
     def mp_all_sol(self, termnum):
-        soldict = dict()
-        rootsdict = sympy.roots(self.localind, t)
-        roots = rootsdict.keys()
-        UPPERBOUND = max(roots)
-        def listdiv(inlst, num):
-            fct = sympy.factorial(num)
-            return [term / toc(fct) for term in inlst]
-        for root in roots:
-            # Get the Holomorphic Solution
-            initval = [0 for num in range(UPPERBOUND + 1)]
-            initval[root] = 1
-            sollist = [self.mp_hol_sol(initval, termnum)]
-            for logdeg in range(1, rootsdict[root]):
-                initval = [[0 for num in range(UPPERBOUND + 1)]]
-                for num in range(1, len(sollist) + 1):
-                    initval.append(listdiv(sollist[-num], num))
-                sollist.append(self.mp_log_sol(initval, termnum))
-            soldict[root] = sollist
-        return soldict
+        if self.mpallsol == None or self.mpallsol[0] < termnum:
+            soldict = dict()
+            rootsdict = sympy.roots(self.localind, t)
+            roots = rootsdict.keys()
+            UPPERBOUND = max(roots)
+            def listdiv(inlst, num):
+                fct = sympy.factorial(num)
+                return [term / toc(fct) for term in inlst]
+            for root in roots:
+                # Get the Holomorphic Solution
+                initval = [0 for num in range(UPPERBOUND + 1)]
+                initval[root] = 1
+                sollist = [self.mp_hol_sol(initval, termnum)]
+                for logdeg in range(1, rootsdict[root]):
+                    initval = [[0 for num in range(UPPERBOUND + 1)]]
+                    for num in range(1, len(sollist) + 1):
+                        initval.append(listdiv(sollist[-num], num))
+                    sollist.append(self.mp_log_sol(initval, termnum))
+                soldict[root] = sollist
+            self.mpallsol = (termnum, soldict)
+            return soldict
+        else:
+            return self.mpallsol[1]
+        
+    def eval_MUM(self, termnum, pt):
+        soldict = self.mp_all_sol(termnum)
+        logpt = mpmath.log(toc(pt))
+        f0 = polyval(soldict[0][0], pt)
+        f1 = polyval(soldict[0][1], pt)
+        f2 = polyval(soldict[0][2], pt)
+        f3 = polyval(soldict[0][3], pt)
+        return [f0, f1+logpt*(f0), f2+logpt*(f1+logpt*(f0/2)), f3+logpt*(f2+logpt*(f1/2+logpt*(f0/6)))]
+
+    def attrval_MUM(self, termnum, pt):
+        soldict = self.mp_all_sol(termnum)
+        logpt = mpmath.log(toc(pt))
+        f0 = polyval(soldict[0][0], pt)
+        f1 = polyval(soldict[0][1], pt)
+        f2 = polyval(soldict[0][2], pt)
+        return mpmath.re(logpt ** 2 + (2*f1*logpt + 2*f2) / f0) / (mpmath.pi ** 2)
+
+    def Wronskian_MUM(self, termnum, pt):
+        pt = toc(pt)
+        soldict = self.mp_all_sol(termnum)
+        logpt = mpmath.log(pt)
+        f0 = wrval(soldict[0][0], 3, pt)
+        f1 = wrval(soldict[0][1], 3, pt)
+        f2 = wrval(soldict[0][2], 3, pt)
+        f3 = wrval(soldict[0][3], 3, pt)
+        r00 = f0[0]
+        r01 = f0[1]
+        r02 = f0[2]
+        r03 = f0[3]
+        r10 = logpt*f0[0] + f1[0]
+        r11 = f0[0]/pt + logpt*f0[1] + f1[1]
+        r12 = -((f0[0] - 2*pt*f0[1])/pt**2) + logpt*f0[2] + f1[2]
+        r13 = (2*f0[0] - 3*pt*f0[1] + 3*pt**2*f0[2])/pt**3 + logpt*f0[3] + f1[3]
+        r20 = logpt**2*f0[0]/2 + logpt*f1[0] + f2[0]
+        r21 = (logpt*f0[0])/pt + logpt**2*f0[1]/2 + f1[0]/pt + logpt*f1[1] + f2[1]
+        r22 = (1/(2*pt**2))*(-2*(-1 + logpt)*f0[0] - 2*f1[0] + pt*(4*f1[1] + logpt*(4*f0[1] + logpt*pt*f0[2] + 2*pt*f1[2]) + 2*pt*f2[2]))
+        r23 = (1/(2*pt**3))*((-6 + 4*logpt)*f0[0] + 4*f1[0] + pt*(-6*(-1 + logpt)*f0[1] - 6*f1[1] + pt*(6*f1[2] + logpt*(6*f0[2] + logpt*pt*f0[3] + 2*pt*f1[3]) + 2*pt*f2[3])))
+        r30 = logpt**2*(logpt*f0[0] + 3*f1[0])/6 + logpt*f2[0] + f3[0]
+        r31 =  (1/(6*pt))*(6*f2[0] + logpt*(6*f1[0] + logpt*(3*f0[0] + logpt*pt*f0[1] + 3*pt*f1[1]) + 6*pt*f2[1])) + f3[1]
+        r32 = (1/(6*pt**2))*(-3*(-2 + logpt)*logpt*f0[0] - 6*(-1 + logpt)*f1[0] - 6*f2[0] + pt*(12*f2[1] + logpt*(12*f1[1] + logpt*(6*f0[1] + logpt*pt*f0[2] + 3*pt*f1[2]) + 6*pt*f2[2]) + 6*pt*f3[2]))
+        r33 = (1/(6*pt**3))*(6*(1 + (-3 + logpt)*logpt)*f0[0] + 6*(-3 + 2*logpt)*f1[0] + 12*f2[0] + pt*(-9*(-2 + logpt)*logpt*f0[1] - 18*(-1 + logpt)*f1[1] - 18*f2[1] + pt*(18*f2[2] + logpt*(18*f1[2] + logpt*(9*f0[2] + logpt*pt*f0[3] + 3*pt*f1[3]) + 6*pt*f2[3]) + 6*pt*f3[3])))
+        return [[r00,r01,r02,r03],[r10,r11,r12,r13],[r20,r21,r22,r23],[r30,r31,r32,r33]]
     
+    def Wronskian_MUM_MMA(self, termnum, pt):
+        wrsk = self.Wronskian_MUM(termnum, pt)
+        outstr = '{'
+        for num in range(5):
+            if num == 0:
+                mult = mpmath.zeta(3)
+            else:
+                mult = (2 * mpmath.pi * mpmath.j) ** (4-num)
+            outstr += '{'
+            for num2 in range(4):
+                outstr += str(wrsk[num-(num>0)][num2]*mult)
+                if num2 < 3:
+                    outstr += ','
+            if num < 4:
+                outstr += '},'
+            else:
+                outstr += '}'
+        outstr += '}'
+        return outstr.replace('j', 'I')
+
+
     def isMUM(self):
         return not sympy.expand(self.localind - t ** self.deg)
     
@@ -588,6 +676,9 @@ class PFO:
         
 if __name__ == "__main__":
     opr = PFO(TEST_PFO)
-    opr = opr.translation((sympy.Integer(35) + 26 * sympy.I)/47)
+    z0 = sympy.Integer(-1)/768
     print("Start!")
-    print(opr.mp_all_sol(1000)[3][0][999])
+    opr.mp_all_sol(2000)
+    print("Finish!")
+    print(opr.attrval_MUM(1000, z0))
+    print(opr.Wronskian_MUM_MMA(1000, z0))
