@@ -5,9 +5,12 @@ We only deal with PF Operator in polynomial of z, d = d/dz and t = z * d/dz.
 '''
 import padic
 import sympy
-import fractions
-from numba import jit
+import mpmath
+mpmath.mp.dps = 200
+from numba import njit
 import numpy as np
+import sys
+sys.set_int_max_str_digits(100000)
 
 # The Symbols
 # z: the variable of the ODE
@@ -21,7 +24,7 @@ t = sympy.Symbol('t')
 DEG_BOUND = 30
 Z_DEG_BOUND = 150
 # TEST_PFO = -3125*d**4*z**5 + d**4*z**4 - 25000*d**3*z**4 + 6*d**3*z**3 - 45000*d**2*z**3 + 7*d**2*z**2 - 15000*d*z**2 + d*z - 120*z
-TEST_PFO = "z * (-3125*d**4*z**5 + d**4*z**4 - 25000*d**3*z**4 + 6*d**3*z**3 - 45000*d**2*z**3 + 7*d**2*z**2 - 15000*d*z**2 + d*z - 120*z)"
+TEST_PFO = "z * (-3125*d**4*z**5 + d**4*z**4 - 25000*d**3*z**6 + 6*d**3*z**3 - 45000*d**2*z**3 + 7*d**2*z**2 - 15000*d*z**4 + d*z - 120*z)"
 LEG = "z * (z-1) * d^2 + (2*z - 1) * d + 1/4"
 
 
@@ -91,7 +94,10 @@ def to_primitive(ineqn, var, deg):
     for num in range(1, deg + 1):
         gcd = sympy.gcd(gcd, ineqn.coeff(var, num))
     return sympy.expand(sympy.cancel(ineqn / gcd))
-    
+
+def toc(innum):
+    return mpmath.mpf(sympy.re(innum)) + mpmath.mpf(sympy.im(innum)) * mpmath.j
+
 # The Picard Fuchs Operator Class
 class PFO:
     def __init__(self, ineqn, pr=False):
@@ -133,6 +139,7 @@ class PFO:
         self.localexp = None
         # Primitive t-form List
         self.primtlist = None
+        self.mpprimtlist = None
         self.primtlistpadic = None
         
         if pr:
@@ -200,26 +207,41 @@ class PFO:
                 return (inp, inacc, outlst)
             else:
                 return self.primtlistpadic
-            
     
+    def mpprimtform_list(self):
+        if self.mpprimtlist == None:
+            rs = self.primtform_list()
+            outlst = []
+            for num in range(len(rs[2])):
+                outlst.append([toc(_) for _ in rs[2][num]])
+            self.mpprimtlist = outlst
+            return outlst
+        else:
+            return self.mpprimtlist
     
-    def hol_sol(self, inlst, termnum, inp=None, inacc=4):
+    def hol_sol(self, inlst, termnum, inp=None, inacc=4, expnd=True):
         plist = self.primtform_list(inp, inacc)[2]
         c = [0 for num in range(termnum)]
         outlst = []
         def mono_opr(deg, coeff):
             for num1 in range(self.deg + 1):
                 cdn = coeff * (deg ** num1)
+                if expnd:
+                    cdn = sympy.expand(cdn)
                 if cdn:
                     for num2 in range(len(plist[num1])):
                         if deg + num2 < termnum:
                             c[deg + num2] += plist[num1][num2] * cdn
+                            if expnd:
+                                c[deg + num2] = sympy.expand(c[deg + num2])
                         else:
                             break
         for num in range(termnum):
             den = 0
             for num1 in range(self.deg + 1):
                 den += plist[num1][0] * (num ** num1)
+                if expnd:
+                    den = sympy.expand(den)
             # print(den, c, outlst, not den, num)
             if not den:
                 if num < len(inlst):
@@ -232,7 +254,36 @@ class PFO:
                     newterm = -c[num] * sympy.Rational(1, den)
                 else:
                     newterm = -c[num] / den
+                if expnd:
+                    newterm = sympy.expand(newterm)
                 outlst.append(newterm)
+                mono_opr(num, newterm)
+        return outlst
+    
+    def mp_hol_sol(self, inlst, termnum):
+        plist = self.mpprimtform_list()
+        c = [toc(0) for _ in range(termnum)]
+        outlst = [toc(0) for _ in range(termnum)]
+        inlst = [toc(_) for _ in inlst]
+        def mono_opr(deg, coeff):
+            for num1 in range(self.deg + 1):
+                cdn = coeff * (deg ** num1)
+                if cdn:
+                    for num2 in range(len(plist[num1])):
+                        if deg + num2 < termnum:
+                            c[deg + num2] += plist[num1][num2] * cdn
+                        else:
+                            break
+        for num in range(termnum):
+            den = mpmath.mpc(0)
+            for num1 in range(len(plist)):
+                den += plist[num1][0] * (num ** num1)
+            if num < len(inlst):
+                outlst[num] = inlst[num]
+                mono_opr(num, inlst[num])
+            else:
+                newterm = -c[num] / den
+                outlst[num] = newterm
                 mono_opr(num, newterm)
         return outlst
     
@@ -288,6 +339,53 @@ class PFO:
                 mono_opr(num, newterm)
         return outlst
     
+    def mp_log_sol(self, inlst, termnum):
+        plist = self.mpprimtform_list()
+        c = [toc(0) for _ in range(termnum)]
+        outlst = [toc(0) for _ in range(termnum)]
+        inlst = [[toc(_) for _ in __] for __ in inlst]
+        def mono_opr(deg, coeff):
+            for num1 in range(self.deg + 1):
+                cdn = coeff * (deg ** num1)
+                if cdn :
+                    for num2 in range(len(plist[num1])):
+                        if deg + num2 < termnum:
+                            c[deg + num2] += plist[num1][num2] * cdn
+                        else:
+                            break
+        def log_mono_opr(deg, logdeg, coeff):
+            for num1 in range(self.deg + 1):
+                if (deg) or (num1 >= logdeg):
+                    cdn = coeff * (deg ** (num1 - logdeg))
+                    for num2 in range(num1, num1-logdeg, -1):
+                        cdn *= num2
+                else:
+                    cdn = 0
+                if cdn :
+                    for num2 in range(len(plist[num1])):
+                        if deg + num2 < termnum:
+                            c[deg + num2] += cdn * plist[num1][num2]
+                        else:
+                            break
+        for num2 in range(1, len(inlst)):
+            for num in range(len(inlst[num2])):
+                if num < termnum:
+                    log_mono_opr(num, num2, inlst[num2][num])
+                else:
+                    break
+        for num in range(termnum):
+            den = 0
+            for num1 in range(self.deg + 1):
+                den += plist[num1][0] * (num ** num1)
+            if num < len(inlst[0]):
+                    outlst[num] = inlst[0][num]
+                    mono_opr(num, inlst[0][num])
+            else:
+                newterm = -c[num] / den
+                outlst[num] = newterm
+                mono_opr(num, newterm)
+        return outlst
+    
     def all_sol(self, termnum, inp=None, inacc=4):
         soldict = dict()
         rootsdict = sympy.roots(self.localind, t)
@@ -306,6 +404,27 @@ class PFO:
                 for num in range(1, len(sollist) + 1):
                     initval.append(listdiv(sollist[-num], num))
                 sollist.append(self.log_sol(initval, termnum, inp, inacc))
+            soldict[root] = sollist
+        return soldict
+    
+    def mp_all_sol(self, termnum):
+        soldict = dict()
+        rootsdict = sympy.roots(self.localind, t)
+        roots = rootsdict.keys()
+        UPPERBOUND = max(roots)
+        def listdiv(inlst, num):
+            fct = sympy.factorial(num)
+            return [term / toc(fct) for term in inlst]
+        for root in roots:
+            # Get the Holomorphic Solution
+            initval = [0 for num in range(UPPERBOUND + 1)]
+            initval[root] = 1
+            sollist = [self.mp_hol_sol(initval, termnum)]
+            for logdeg in range(1, rootsdict[root]):
+                initval = [[0 for num in range(UPPERBOUND + 1)]]
+                for num in range(1, len(sollist) + 1):
+                    initval.append(listdiv(sollist[-num], num))
+                sollist.append(self.mp_log_sol(initval, termnum))
             soldict[root] = sollist
         return soldict
     
@@ -468,12 +587,7 @@ class PFO:
         return outlst
         
 if __name__ == "__main__":
-    # a = padic.PN(3,5).setfrac(14,37)
     opr = PFO(TEST_PFO)
-    # print(opr)
-    # print("OK")
-    # opr.all_sol(1000)
-    # print("Done1")
-    # s = opr.all_sol(300, 101)[0]
-    # print("Done2")
-    # print(opr.instanton(5, pr=True))
+    opr = opr.translation((sympy.Integer(35) + 26 * sympy.I)/47)
+    print("Start!")
+    print(opr.mp_all_sol(1000)[3][0][999])
