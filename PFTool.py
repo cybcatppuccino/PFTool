@@ -130,10 +130,32 @@ def mptomma(inm):
         else:
             outstr += '}'
     outstr += '}'
-    return outstr.replace('j', 'I').replace('.0 ', ' ').replace('.0I', 'I')
+    return outstr.replace('j', 'I').replace('.0 ', ' ').replace('.0I', 'I').replace('e', '*10^')
 
 STANDWR = mpmath.matrix([[toc(int(num1 == num2) * sympy.factorial(num1))
                      for num1 in range(4)] for num2 in range(4)])
+
+STANDCONTOUR1 = [0.25000, 0.31250, 0.39063, 0.48120, 0.58496, 0.66797, 0.73438, 0.78750, 0.83000]
+STANDCONTOUR2 = [0.83000, 0.83371 - 0.03534 *sympy.I, 0.84470 - 0.06915 *sympy.I, 0.86247 - \
+ 0.09992 *sympy.I, 0.88625 - 0.12633 *sympy.I, 0.91500 - 0.14722 *sympy.I, 0.94747 - \
+ 0.16168 *sympy.I, 0.98223 - 0.16907 *sympy.I, 1.01777 - 0.16907 *sympy.I, 1.05253 - \
+ 0.16168 *sympy.I, 1.08500 - 0.14722 *sympy.I, 1.11375 - 0.12633 *sympy.I, 1.13753 - \
+ 0.09992 *sympy.I, 1.15530 - 0.06915 *sympy.I, 1.16629 - \
+ 0.03534 *sympy.I, 1.1700, 1.16629 + 0.03534 *sympy.I, 1.15530 + \
+ 0.06915 *sympy.I, 1.13753 + 0.09992 *sympy.I, 1.11375 + 0.12633 *sympy.I, 1.08500 + \
+ 0.14722 *sympy.I, 1.05253 + 0.16168 *sympy.I, 1.01777 + 0.16907 *sympy.I, 0.98223 + \
+ 0.16907 *sympy.I, 0.94747 + 0.16168 *sympy.I, 0.91500 + 0.14722 *sympy.I, 0.88625 + \
+ 0.12633 *sympy.I, 0.86247 + 0.09992 *sympy.I, 0.84470 + 0.06915 *sympy.I, 0.83371 + \
+ 0.03534 *sympy.I, 0.83000]
+
+def approx(inval, extreprec=20):
+    r = abs(inval)
+    if r == 0:
+        return 0
+    else:
+        d = 2 ** (sympy.floor(sympy.log(r, 2)) - extreprec)
+        #print(inval, d, sympy.floor(inval / d) * d)
+        return sympy.simplify(sympy.floor(inval / d) * d)
 
 def hololist(inpfo, zlist, termnum, pr=False):
     if pr:
@@ -523,7 +545,7 @@ class PFO:
         r22 = (1/(2*pt**2))*(-2*(-1 + logpt)*f0[0] - 2*f1[0] + pt*(4*f1[1] + logpt*(4*f0[1] + logpt*pt*f0[2] + 2*pt*f1[2]) + 2*pt*f2[2]))
         r23 = (1/(2*pt**3))*((-6 + 4*logpt)*f0[0] + 4*f1[0] + pt*(-6*(-1 + logpt)*f0[1] - 6*f1[1] + pt*(6*f1[2] + logpt*(6*f0[2] + logpt*pt*f0[3] + 2*pt*f1[3]) + 2*pt*f2[3])))
         r30 = logpt**2*(logpt*f0[0] + 3*f1[0])/6 + logpt*f2[0] + f3[0]
-        r31 =  (1/(6*pt))*(6*f2[0] + logpt*(6*f1[0] + logpt*(3*f0[0] + logpt*pt*f0[1] + 3*pt*f1[1]) + 6*pt*f2[1])) + f3[1]
+        r31 = (1/(6*pt))*(6*f2[0] + logpt*(6*f1[0] + logpt*(3*f0[0] + logpt*pt*f0[1] + 3*pt*f1[1]) + 6*pt*f2[1])) + f3[1]
         r32 = (1/(6*pt**2))*(-3*(-2 + logpt)*logpt*f0[0] - 6*(-1 + logpt)*f1[0] - 6*f2[0] + pt*(12*f2[1] + logpt*(12*f1[1] + logpt*(6*f0[1] + logpt*pt*f0[2] + 3*pt*f1[2]) + 6*pt*f2[2]) + 6*pt*f3[2]))
         r33 = (1/(6*pt**3))*(6*(1 + (-3 + logpt)*logpt)*f0[0] + 6*(-3 + 2*logpt)*f1[0] + 12*f2[0] + pt*(-9*(-2 + logpt)*logpt*f0[1] - 18*(-1 + logpt)*f1[1] - 18*f2[1] + pt*(18*f2[2] + logpt*(18*f1[2] + logpt*(9*f0[2] + logpt*pt*f0[3] + 3*pt*f1[3]) + 6*pt*f2[3]) + 6*pt*f3[3])))
         return mpmath.matrix([[r00,r01,r02,r03],[r10,r11,r12,r13],[r20,r21,r22,r23],[r30,r31,r32,r33]])
@@ -561,7 +583,7 @@ class PFO:
             else:
                 outstr += '}'
         outstr += '}'
-        return outstr.replace('j', 'I').replace('.0 ', ' ').replace('.0I', 'I')
+        return outstr.replace('j', 'I').replace('.0 ', ' ').replace('.0I', 'I').replace('e', '*10^')
     
     # [q(x)=e^(log_sol/hol_sol), x(q)]
     def qcoord(self, termnum, pr=False):
@@ -723,8 +745,49 @@ class PFO:
         # using Wronskian computations
         
         # znew need to be small to maintain convergence
-        # termnum >= 4
         return STANDWR * (self.Wronskian0(termnum, znew) ** -1)
+
+    def monodromy_only_pt(self, pt, termnum = round(mpmath.mp.dps * 2), pr=False):
+        # Compute the monodromy to the pt, where pt should be the only special point other than the origin and infinity
+        # Return the monodromy matrix under basis at the MUM basis
+        contour1 = [approx(_ * pt) for _ in STANDCONTOUR1]
+        contour2 = [approx(_ * pt) for _ in STANDCONTOUR2]
+        if pr:
+            print(termnum)
+        mat1 = hololist(self, contour1, termnum, pr)
+        mat2 = hololist(self, contour2, termnum, pr)
+        return (mat1 ** -1) * (mat2 ** -1) * mat1
+
+    def monodromy_origin_test(self, r, termnum = round(mpmath.mp.dps * 2), pr=False):
+        # Compute the monodromy at origin
+        # Return the monodromy matrix under basis at the MUM basis
+        contour1 = [approx(_ * r) for _ in [0, 1]]
+        contour2 = [approx(sympy.exp(2*sympy.pi*sympy.I*_/25) * r) for _ in range(26)]
+        if pr:
+            print(termnum)
+        mat1 = hololist(self, contour1, termnum, pr)
+        mat2 = hololist(self, contour2, termnum, pr)
+        return (mat1 ** -1) * (mat2 ** -1) * mat1
+
+    def CY_trans_holbasis_real_avoidreal(self, pts, znew, termnum = round(mpmath.mp.dps * 2), pr=False):
+        contour1 = [0]
+        contour2 = [znew]
+        pts0 = pts.copy()
+        def set_dist(inpts, z0):
+            return min(abs(z0-_) for _ in inpts)
+        while sympy.im(contour1[-1]) < abs(znew) * 5:
+            contour1.append(approx(contour1[-1] + set_dist(pts0, contour1[-1]) * sympy.I / 5))
+            if 0 not in pts0:
+                pts0.append(0)
+        while sympy.im(contour2[-1]) < sympy.im(contour1[-1]):
+            contour2.append(approx(contour2[-1] + set_dist(pts0, contour2[-1]) * sympy.I / 5))
+        contour = contour1 + list(reversed(contour2))
+        return hololist(self, contour, termnum, pr)
+
+    def eval_MUM0(self, znew, pr=False):
+        pts = list(sympy.solve(self.discriminant))
+        mat = self.CY_trans_holbasis_real_avoidreal(pts, znew=znew, pr=pr)
+        return (mat ** -1) * mpmath.matrix([[1], [0], [0], [0]])
         
 if __name__ == "__main__":
     '''
@@ -739,19 +802,8 @@ if __name__ == "__main__":
     '''
 
     b = PFO(TEST_PFO)
-    thez = (1 - sympy.I) / 2
-    thezlist = [thez]
-    for _ in range(10):
-        thez += sympy.I / 10
-        thezlist.append(thez)
-    for _ in range(10):
-        thez += -sympy.Integer(1) / 10
-        thezlist.append(thez)
-    for _ in range(10):
-        thez += -sympy.I / 10
-        thezlist.append(thez)
-    for _ in range(10):
-        thez += sympy.Integer(1) / 10
-        thezlist.append(thez)
-    print(mptomma(hololist(b, thezlist, 100, True)))
+    print(mptomma(b.monodromy_only_pt(sympy.Integer(1)/3125, termnum=1000, pr=False)))
+    #z0 = sympy.Integer(20)/3125
+    #print(b.eval_MUM0(z0, pr=True))
+
     
