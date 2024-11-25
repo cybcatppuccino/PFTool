@@ -29,7 +29,8 @@
 (529, '289', '4.61', 'Sporadic Operator.') (256*z - 1)*(5120*z + 1)**2*(16384*z - 1)
 '''
 
-thelist = [2,420,3,22,29,34,44,51,86,90,105,128,129,159,177,182,243,260,299,325,378,392,398,439,441,478,523,529]
+#thelist = [2,420,3,22,29,34,44,51,86,90,105,128,129,159,177,182,243,260,299,325,378,392,398,439,441,478,523,529]
+thelist = [243,260,299,325,378,392,398,439,441,478,523,529]
 
 import AESZ
 import PFTool
@@ -63,14 +64,10 @@ for num in thelist:
 
     def invinterval(x, y):
         if x is None:
-            return (None, 0 if y == 0 else 1/sympy.Integer(y))
+            return (None if y == 0 else 1/sympy.Integer(y), 0)
         if y is None:
-            return (0 if x == 0 else 1/sympy.Integer(x), None)
-        if x == 0:
-            return (0, 1/sympy.Integer(y))
-        if y == 0:
-            return (1/sympy.Integer(x), 0)
-        return (1/sympy.Integer(y), 1/sympy.Integer(x))
+            return (0, None if x == 0 else 1/sympy.Integer(x))
+        return (None if y == 0 else 1/sympy.Integer(y), None if x == 0 else 1/sympy.Integer(x))
 
     for n in range(-1, len(solveinv)):
         piece = []
@@ -112,14 +109,27 @@ for num in thelist:
             zlist.append(pt2[0])
             print(zlist)
             return zlist
+        
+        def is_attr(rst2):
+            s1 = sum(abs(_) for _ in rst2[0]) < 10**5
+            s2 = sum(abs(_) for _ in rst2[1]) < 10**5
+            s3 = sum(abs(_) for _ in rst2[2]) < 10**5
+            s4 = sum(abs(_) for _ in rst2[3]) < 10**5
+            s5 = min(abs(_) for _ in rst2[0]) < 10**3
+            s6 = min(abs(_) for _ in rst2[1]) < 10**3
+            s7 = min(abs(_) for _ in rst2[2]) < 10**3
+            s8 = min(abs(_) for _ in rst2[3]) < 10**3
+            return s1 and s2 and s3 and s4 and s5 and s6 and s7 and s8
 
         if len(piece) > 0:
             print(num, disc, piece)
 
+            #'''
+
             mat = pfo.eval_Wronskian0(piece[0][0], pr=True)
             rst1, rst2 = LLLtest(mat)
             outstr = ""
-            if sum(abs(_) for _ in rst2[3]) < 10**6:
+            if is_attr(rst2):
                 print("Attr!", num, piece[0][0], rst2)
                 outstr = "Attr_"
             with open('results/' + outstr + str(num) + '_' + str(piece[0][0]).replace('/', 'd') + '.txt', 'w') as f:
@@ -130,11 +140,13 @@ for num in thelist:
                 mat = PFTool.hololist(pfo, zlist, 128) * mat
                 rst1, rst2 = LLLtest(mat)
                 outstr = ""
-                if sum(abs(_) for _ in rst2[3]) < 10**6:
+                if is_attr(rst2):
                     print("Attr!", num, piece[i][0], rst2)
                     outstr = "Attr_"
                 with open('results/' + outstr + str(num) + '_' + str(piece[i][0]).replace('/', 'd') + '.txt', 'w') as f:
                     f.write(PFTool.mptomma(mat ** -1))
+
+            #'''
 
 '''
 
