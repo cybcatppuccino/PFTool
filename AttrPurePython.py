@@ -29,18 +29,21 @@
 (529, '289', '4.61', 'Sporadic Operator.') (256*z - 1)*(5120*z + 1)**2*(16384*z - 1)
 '''
 
-thelist = [2,3,22,29,34,44,51,86,90,105,128,129,159,177,182,243,260,299,325,378,392,398,420,439,441,478,523,529]
+thelist = [2,420,3,22,29,34,44,51,86,90,105,128,129,159,177,182,243,260,299,325,378,392,398,439,441,478,523,529]
 
 import AESZ
+import PFTool
 import sympy
 import mpmath
+from LLL import reduction
 
 for num in thelist:
     pfo = AESZ.AESZ(num).pfo
     disc = pfo.discriminant
     solveinv = [1/_ for _ in sympy.solve(disc)]
-    solveinv.sort()
     lcm = sympy.lcm([abs(_) for _ in solveinv])
+    solveinv.append(0)
+    solveinv.sort()
     factorint = sympy.factorint(lcm)
     def factors(indic):
         # return all factors of an integer by its prime factorization
@@ -58,11 +61,87 @@ for num in thelist:
     allfactors = [-_ for _ in allfactorspos] + allfactorspos
     allfactors.sort()
 
-    print(num, solveinv, lcm, allfactors)
+    def invinterval(x, y):
+        if x is None:
+            return (None, 0 if y == 0 else 1/sympy.Integer(y))
+        if y is None:
+            return (0 if x == 0 else 1/sympy.Integer(x), None)
+        if x == 0:
+            return (0, 1/sympy.Integer(y))
+        if y == 0:
+            return (1/sympy.Integer(x), 0)
+        return (1/sympy.Integer(y), 1/sympy.Integer(x))
 
+    for n in range(-1, len(solveinv)):
+        piece = []
+        for _ in allfactors:
+            if n == -1 and _ < solveinv[0]:
+                piece.append((1/sympy.Integer(_), invinterval(None, solveinv[0])))
+            elif n == len(solveinv)-1 and _ > solveinv[-1]:
+                piece.append((1/sympy.Integer(_), invinterval(solveinv[-1], None)))
+            elif _ > solveinv[n] and _ < solveinv[n+1]:
+                piece.append((1/sympy.Integer(_), invinterval(solveinv[n], solveinv[n+1])))
+        piece.sort(key=lambda x: x[0])
+
+        def LLLtest(mat):
+            ls = list((mat ** -1) * mpmath.matrix([[1], [0], [0], [0]]))
+            tpj = 2 * mpmath.pi * mpmath.j
+            vals = [mpmath.zeta(3), tpj ** 3, tpj ** 2, tpj ** 1]
+            tol = 10**(12 - mpmath.mp.dps)
+            ls2 = [mpmath.re(ls[0]*vals[0]), mpmath.re(ls[0]*vals[1]), mpmath.re(ls[1]*vals[2]), mpmath.re(ls[2]*vals[3]), mpmath.re(ls[3]), \
+                mpmath.im(ls[0]*vals[0]), mpmath.im(ls[0]*vals[1]), mpmath.im(ls[1]*vals[2]), mpmath.im(ls[2]*vals[3]), mpmath.im(ls[3])]
+            ls3 = []
+            for _ in ls2:
+                if abs(_) > tol:
+                    ls3.append(_)
+            l = len(ls3)
+            llllst = [[int(a==b) + int(ls3[a] * 10**(mpmath.mp.dps - 12)) * int(b==l) for b in range(l+1)] for a in range(l)]
+            return ls2, reduction(llllst)
+        
+        def genzlist(pt1, pt2):
+            zlist = []
+            znow = pt1[0]
+            while znow < pt2[0]:
+                zlist.append(znow)
+                if pt1[1][0] is None:
+                    znow += PFTool.approx((pt1[1][1] - znow) / 5)
+                elif pt1[1][1] is None:
+                    znow += PFTool.approx((znow - pt1[1][0]) / 4)
+                else:
+                    znow += PFTool.approx(min((pt1[1][1] - znow) / 5, (znow - pt1[1][0]) / 4))
+            zlist.append(pt2[0])
+            print(zlist)
+            return zlist
+
+        if len(piece) > 0:
+            print(num, disc, piece)
+
+            mat = pfo.eval_Wronskian0(piece[0][0], pr=True)
+            rst1, rst2 = LLLtest(mat)
+            outstr = ""
+            if sum(abs(_) for _ in rst2[3]) < 10**6:
+                print("Attr!", num, piece[0][0], rst2)
+                outstr = "Attr_"
+            with open('results/' + outstr + str(num) + '_' + str(piece[0][0]).replace('/', 'd') + '.txt', 'w') as f:
+                f.write(PFTool.mptomma(mat ** -1))
+            
+            for i in range(1, len(piece)):
+                zlist = genzlist(piece[i-1], piece[i])
+                mat = PFTool.hololist(pfo, zlist, 128) * mat
+                rst1, rst2 = LLLtest(mat)
+                outstr = ""
+                if sum(abs(_) for _ in rst2[3]) < 10**6:
+                    print("Attr!", num, piece[i][0], rst2)
+                    outstr = "Attr_"
+                with open('results/' + outstr + str(num) + '_' + str(piece[i][0]).replace('/', 'd') + '.txt', 'w') as f:
+                    f.write(PFTool.mptomma(mat ** -1))
+
+'''
 
 pfo = AESZ.AESZ(447).pfo
 z0 = sympy.Integer(1)/8
 #print(pfo.eval_attr_Wronskian_MMA(z0, pr=True))
 
 print(pfo.eval_attr_LLL(z0, pr=True))
+
+'''

@@ -797,6 +797,10 @@ class PFO:
         mat = self.CY_trans_holbasis_real_avoidreal(pts, znew=znew, pr=pr)
         return (mat ** -1) * mpmath.matrix([[1], [0], [0], [0]])
     
+    def eval_Wronskian0(self, znew, pr=False):
+        pts = list(sympy.solve(self.discriminant))
+        return self.CY_trans_holbasis_real_avoidreal(pts, znew=znew, pr=pr)
+    
     def eval_attr_LLL(self, znew, prec=50, pr=False):
         ls = list(self.eval_MUM0(znew, pr))
         tpj = 2 * mpmath.pi * mpmath.j
