@@ -5,9 +5,9 @@ We only deal with PF Operator in polynomial of z, d = d/dz and t = z * d/dz.
 '''
 import padic
 import sympy
+from LLL import reduction
 import mpmath
 mpmath.mp.dps = 64
-from numba import njit
 import numpy as np
 import sys
 sys.set_int_max_str_digits(100000)
@@ -23,7 +23,7 @@ t = sympy.Symbol('t')
 
 DEG_BOUND = 30
 Z_DEG_BOUND = 150
-TEST_PFO = "z * (-3125*d**4*z**5 + d**4*z**4 - 25000*d**3*z**4 + 6*d**3*z**3 - 45000*d**2*z**3 + 7*d**2*z**2 - 15000*d*z**2 + d*z - 120*z)"
+TEST_PFO = "-3125*d^4*z^5 + d^4*z^4 - 25000*d^3*z^4 + 6*d^3*z^3 - 45000*d^2*z^3 + 7*d^2*z^2 - 15000*d*z^2 + d*z - 120*z"
 TEST_PFO2 = "65536*t**4*z**2 - 512*t**4*z + t**4 + 262144*t**3*z**2 - 1024*t**3*z + 360448*t**2*z**2 - 832*t**2*z + 196608*t*z**2 - 320*t*z + 36864*z**2 - 48*z"
 LEG = "z * (z-1) * d^2 + (2*z - 1) * d + 1/4"
 
@@ -99,7 +99,9 @@ def toc(innum):
     if str(type(innum))[8:14] == "mpmath":
         return mpmath.mpc(innum)
     else:
-        return mpmath.mpf(sympy.re(innum)) + mpmath.mpf(sympy.im(innum)) * mpmath.j
+        repart = sympy.N(sympy.re(innum), mpmath.mp.dps+10)
+        impart = sympy.N(sympy.im(innum), mpmath.mp.dps+10)
+        return mpmath.mpf(str(repart)) + mpmath.mpf(str(impart)) * mpmath.j
 
 def dlist(inlst):
     return [inlst[num] * num for num in range(1, len(inlst))]
@@ -166,7 +168,7 @@ def hololist(inpfo, zlist, termnum, pr=False):
         newpfo = inpfo.translation(zlist[num])
         outmatrix = newpfo.CY_trans_holbasis(termnum, toc(zlist[num + 1]-zlist[num])) * outmatrix
         if pr:
-            print(num)
+            print(num+1, "/", len(zlist) - 1)
     return outmatrix
 
 # The Picard Fuchs Operator Class
@@ -775,19 +777,43 @@ class PFO:
         pts0 = pts.copy()
         def set_dist(inpts, z0):
             return min(abs(z0-_) for _ in inpts)
-        while sympy.im(contour1[-1]) < abs(znew) * 5:
+        while sympy.im(contour1[-1]) < abs(znew) * 1:
             contour1.append(approx(contour1[-1] + set_dist(pts0, contour1[-1]) * sympy.I / 5))
             if 0 not in pts0:
                 pts0.append(0)
         while sympy.im(contour2[-1]) < sympy.im(contour1[-1]):
             contour2.append(approx(contour2[-1] + set_dist(pts0, contour2[-1]) * sympy.I / 5))
-        contour = contour1 + list(reversed(contour2))
+        
+        end1 = contour1[-1]
+        end2 = contour2[-1]
+        contour3 = [approx((end1 * (6-_) + end2 * _)/6) for _ in range(1,6)]
+        contour = contour1 + contour3 + list(reversed(contour2))
+        
+        #contour = contour1 + list(reversed(contour2))
         return hololist(self, contour, termnum, pr)
 
     def eval_MUM0(self, znew, pr=False):
         pts = list(sympy.solve(self.discriminant))
         mat = self.CY_trans_holbasis_real_avoidreal(pts, znew=znew, pr=pr)
         return (mat ** -1) * mpmath.matrix([[1], [0], [0], [0]])
+    
+    def eval_attr_LLL(self, znew, prec=50, pr=False):
+        ls = list(self.eval_MUM0(znew, pr))
+        tpj = 2 * mpmath.pi * mpmath.j
+        vals = [mpmath.zeta(3), tpj ** 3, tpj ** 2, tpj ** 1]
+        tol = 10**(12 - mpmath.mp.dps)
+        ls2 = [mpmath.re(ls[0]*vals[0]), mpmath.re(ls[0]*vals[1]), mpmath.re(ls[1]*vals[2]), mpmath.re(ls[2]*vals[3]), mpmath.re(ls[3]), \
+               mpmath.im(ls[0]*vals[0]), mpmath.im(ls[0]*vals[1]), mpmath.im(ls[1]*vals[2]), mpmath.im(ls[2]*vals[3]), mpmath.im(ls[3])]
+        ls3 = []
+        for _ in ls2:
+            if abs(_) > tol:
+                ls3.append(_)
+        l = len(ls3)
+        llllst = [[int(a==b) + int(ls3[a] * 10**(mpmath.mp.dps - 12)) * int(b==l) for b in range(l+1)] for a in range(l)]
+        if pr:
+            print("LLL")
+        return ls2, reduction(llllst)
+        
         
 if __name__ == "__main__":
     '''
@@ -802,7 +828,7 @@ if __name__ == "__main__":
     '''
 
     b = PFO(TEST_PFO)
-    print(mptomma(b.monodromy_only_pt(sympy.Integer(1)/3125, termnum=1000, pr=False)))
+    #print(mptomma(b.monodromy_only_pt(sympy.Integer(1)/3125, termnum=1000, pr=True)))
     #z0 = sympy.Integer(20)/3125
     #print(b.eval_MUM0(z0, pr=True))
 
