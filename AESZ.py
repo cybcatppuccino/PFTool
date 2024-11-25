@@ -692,6 +692,16 @@ AESZinfolist.append((551, '', '4.51', 'Sporadic Operator. There is a second MUM-
 
 if __name__ == '__main__':
     
+    for _ in AESZinfolist:
+        if _[2][:2] == '4.':
+            disc = AESZ(_[0]).pfo.discriminant
+            solve = sympy.solve(disc)
+            allrational = True
+            for c in solve:
+                if not (c.is_rational):
+                    allrational = False
+            if allrational:
+                print(_, disc)
     # a = AESZ(465)
     a = AESZ(465)
     ap = a.pfo
