@@ -9,10 +9,9 @@ import sympy
 import mpmath
 from LLL import reduction
 
-num = 3
+num = 292
 pfo = AESZ.AESZ(num).pfo
-z0 = sympy.Integer(1)/8 # + 0 * sympy.sqrt(sympy.Integer(17))
+z0 = sympy.Integer(-1)/64 # + 0 * sympy.sqrt(sympy.Integer(17))
 
-print(pfo.calclocalexp())
+print(AESZ.AESZ(num), pfo.calclocalexp())
 print(num, z0, pfo.eval_attr_LLL(z0, pr=True))
-print(num, z0, pfo.eval_Kp(z0, pr=True))

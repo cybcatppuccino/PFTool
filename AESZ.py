@@ -693,7 +693,7 @@ AESZinfolist.append((551, '', '4.51', 'Sporadic Operator. There is a second MUM-
 if __name__ == '__main__':
     thelist = []
     for _ in AESZinfolist:
-        if _[2][:2] == '3.':
+        if _[2][:2] in ['2.','3.','4.','5.']:
             disc = AESZ(_[0]).pfo.discriminant
             solve = sympy.solve(disc)
             allrational = True

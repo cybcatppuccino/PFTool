@@ -801,29 +801,17 @@ class PFO:
         pts = list(sympy.solve(self.discriminant))
         return self.CY_trans_holbasis_real_avoidreal(pts, znew=znew, pr=pr)
     
-    def eval_Kp(self, znew, pr=False):
-        pts = list(sympy.solve(self.discriminant))
-        mat = self.CY_trans_holbasis_real_avoidreal(pts, znew=znew, pr=pr)
-        sol1 = list((mat ** -1) * mpmath.matrix([[1], [0], [0], [0]]))
-        sol2 = list((mat ** -1) * mpmath.matrix([[0], [1], [0], [0]]))
-        term1 = sum(mpmath.conj(sol1[_]) * sol2[3-_] for _ in range(4))
-        term2 = sum(mpmath.conj(sol1[_]) * sol1[3-_] for _ in range(4))
-        term3 = mpmath.zeta(3) * mpmath.conj(sol1[0]) * sol2[0]
-        term4 = mpmath.zeta(3) * mpmath.conj(sol1[0]) * sol1[0]
-        ls2 = [mpmath.re(term1), mpmath.re(term2), mpmath.re(term3), mpmath.re(term4), mpmath.im(term1), mpmath.im(term2), mpmath.im(term3), mpmath.im(term4)]
-        l = 4
-        llllst = [[int(a==b) + int(ls2[a] * 10**(mpmath.mp.dps - 12)) * int(b==l) + int(ls2[a + l] * 10**(mpmath.mp.dps - 12)) * int(b==l+1) for b in range(l+2)] for a in range(l)]
-        if pr:
-            print("LLL")
-        return ls2, reduction(llllst)
-    
     def eval_attr_LLL(self, znew, pr=False):
-        ls = list(self.eval_MUM0(znew, pr))
+        pts = list(sympy.solve(self.discriminant))
+        mat = self.CY_trans_holbasis_real_avoidreal(pts, znew=znew, pr=pr) ** -1
+        sol1 = list(mat * mpmath.matrix([[1], [0], [0], [0]]))
+        sol2 = list(mat * mpmath.matrix([[0], [1], [0], [0]]))
+
         tpj = 2 * mpmath.pi * mpmath.j
         vals = [mpmath.zeta(3), tpj ** 3, tpj ** 2, tpj ** 1]
         tol = 10**(12 - mpmath.mp.dps)
-        ls2 = [mpmath.re(ls[0]*vals[0]), mpmath.re(ls[0]*vals[1]), mpmath.re(ls[1]*vals[2]), mpmath.re(ls[2]*vals[3]), mpmath.re(ls[3]), \
-               mpmath.im(ls[0]*vals[0]), mpmath.im(ls[0]*vals[1]), mpmath.im(ls[1]*vals[2]), mpmath.im(ls[2]*vals[3]), mpmath.im(ls[3])]
+        ls2 = [mpmath.re(sol1[0]*vals[0]), mpmath.re(sol1[0]*vals[1]), mpmath.re(sol1[1]*vals[2]), mpmath.re(sol1[2]*vals[3]), mpmath.re(sol1[3]), \
+               mpmath.im(sol1[0]*vals[0]), mpmath.im(sol1[0]*vals[1]), mpmath.im(sol1[1]*vals[2]), mpmath.im(sol1[2]*vals[3]), mpmath.im(sol1[3])]
         ls3 = []
         for _ in ls2:
             if abs(_) > tol:
@@ -832,9 +820,16 @@ class PFO:
         llllst = [[int(a==b) + int(ls3[a] * 10**(mpmath.mp.dps - 12)) * int(b==l) for b in range(l+1)] for a in range(l)]
         l = 5
         llllst2 = [[int(a==b) + int(ls2[a] * 10**(mpmath.mp.dps - 12)) * int(b==l) + int(ls2[a + l] * 10**(mpmath.mp.dps - 12)) * int(b==l+1) for b in range(l+2)] for a in range(l)]
+        term1 = sum(mpmath.conj(sol1[_]) * sol2[3-_] for _ in range(4))
+        term2 = sum(mpmath.conj(sol1[_]) * sol1[3-_] for _ in range(4))
+        term3 = mpmath.zeta(3) * mpmath.conj(sol1[0]) * sol2[0]
+        term4 = mpmath.zeta(3) * mpmath.conj(sol1[0]) * sol1[0]
+        ls2 = [mpmath.re(term1), mpmath.re(term2), mpmath.re(term3), mpmath.re(term4), mpmath.im(term1), mpmath.im(term2), mpmath.im(term3), mpmath.im(term4)]
+        l = 4
+        llllst3 = [[int(a==b) + int(ls2[a] * 10**(mpmath.mp.dps - 12)) * int(b==l) + int(ls2[a + l] * 10**(mpmath.mp.dps - 12)) * int(b==l+1) for b in range(l+2)] for a in range(l)]
         if pr:
             print("LLL")
-        return ls2, reduction(llllst), reduction(llllst2)
+        return mat, ls2, reduction(llllst), reduction(llllst2), reduction(llllst3)
         
 if __name__ == "__main__":
     '''
