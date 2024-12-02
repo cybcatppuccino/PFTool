@@ -13,13 +13,15 @@ from LLL import reduction
 #num = 89
 #num = 359
 #num = 439
-num = 493
+#num = 190
+num = 475
 pfo = AESZ.AESZ(num).pfo
 #z0 = sympy.Integer(-1)/20
 #z0 = -sympy.Integer(1)/400
 #z0 = sympy.Integer(1)/36
 #z0 = sympy.Integer(1)/512
-z0 = sympy.Integer(1)/320
+#z0 = -sympy.Integer(1)
+z0 = -sympy.Integer(1)
 
 print(AESZ.AESZ(num), pfo.calclocalexp())
 m, _, r1, r2, r3 = pfo.eval_attr_LLL(z0, pr=True)
