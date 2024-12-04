@@ -137,6 +137,9 @@ def mptomma(inm):
 STANDWR = mpmath.matrix([[toc(int(num1 == num2) * sympy.factorial(num1))
                      for num1 in range(4)] for num2 in range(4)])
 
+BASECHANGE = mpmath.matrix([[toc(int(num1 == 3 - num2) * (mpmath.pi * mpmath.j * 2) ** num2)
+                     for num1 in range(4)] for num2 in range(4)])
+
 STANDCONTOUR1 = [0, 0.25000, 0.31250, 0.39063, 0.48120, 0.58496, 0.66797, 0.73438, 0.78750, 0.83000]
 STANDCONTOUR2 = [0.83000, 0.83371 - 0.03534 *sympy.I, 0.84470 - 0.06915 *sympy.I, 0.86247 - \
  0.09992 *sympy.I, 0.88625 - 0.12633 *sympy.I, 0.91500 - 0.14722 *sympy.I, 0.94747 - \
