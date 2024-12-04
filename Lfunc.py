@@ -77,9 +77,13 @@ def alltest2(inval, bound=THE_BOUND, error=1e-7, d=20):
     return   alltest(inval, bound, error, d)\
             +alltest(inval*pi, bound, error, d)\
             +alltest(inval*(pi**2), bound, error, d)\
+            +alltest(inval/pi, bound, error, d)\
+            +alltest(inval/(pi**2), bound, error, d)\
             +alltest(1/inval, bound, error, d)\
             +alltest(pi/inval, bound, error, d)\
-            +alltest((pi**2)/inval, bound, error, d)
+            +alltest((pi**2)/inval, bound, error, d)\
+            +alltest(1/(pi*inval), bound, error, d)\
+            +alltest(1/((pi**2)*inval), bound, error, d)
 
 def testlist(inlst, bound=THE_BOUND, error=1e-7, d=20):
     return [alltest2(num, bound, error, d) for num in inlst]
@@ -88,6 +92,6 @@ def is_alltest2_nontriv(inval, bound=THE_BOUND, error=1e-7, d=20):
     return any(alltest2(inval, bound, error, d))
 
 if __name__ == '__main__':
-    tl = [0.894103772609959222407826531437406803285, -3.0935897388106238776643787193, 0.7353708774318210563434, 10.320035755349647364980018698]
+    tl = [0.4222831178979863328330828029729991354769372956766793080733248088, - 0.2795357516460809399288839299017105376032984973733782962200]
     print(testlist(tl))
     # print(alltest2(0, 100, 1e-10, 15))
