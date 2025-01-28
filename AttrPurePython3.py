@@ -57,11 +57,11 @@ def generate_testlist(bound, ithprime):
     else:
         testlist3 = [list3[ithprime] ** i * sympy.Integer(3) ** -j for j in range(0, 4) for i in range(-j, 4)]
     testlist0 = [a * b * c for a in testlist1 for b in testlist2 for c in testlist3]
-    testlist = [sympy.expand(x) for x in testlist0 if bound / 300 <= abs(PFTool.toc(x)) <= bound / 2]
+    testlist = [sympy.expand(x) for x in testlist0 if bound / 6 <= abs(PFTool.toc(x)) <= bound / 1.5]
     return testlist
 
 
-for num in range(31, 552):
+for num in range(432, 552):
     pfo = AESZ.AESZ(num).pfo
     sol = pfo.mp_all_sol(230)
     bnd = abs(sol[0][0][-1] ** (-1/199))
@@ -79,4 +79,4 @@ for num in range(31, 552):
                 with open('valid_results.txt', 'a') as f:
                     f.write('ATTR! ' + str(num) + ',' + str(z0) + ',' + str(val) + ',' + str(idt) + '\n')
 
-                    
+                
