@@ -17,12 +17,16 @@ LP2 = sympy.expand(x3 * x2**2 + x1*(z * x1 + x3)*(x1 - z * x3))
 LP = sympy.expand(x3 * x2**2 + x1*(x1 - x3)*(x1 - z * x3))
 QP = sympy.expand(x1**5 + x2**5 + x3**5 + x4**5 + x5**5 - (1 / z)*x1*x2*x3*x4*x5)
 CP3 = sympy.expand(((x1+x2+x3)*(1/x1+1/x2+1/x3)*z-1)*x1*x2*x3)
-CP4 = sympy.expand(((x1+x2+x3)*(1/x1+1/x2+(z+1)/x3)-z)*x1*x2*x3)
+CP4 = sympy.expand(((x1+x2+x3)*(1/x1+1/x2+1/x3)-z)*x1*x2*x3)
 QP2 = sympy.expand(((x1+x2+x3+x4+x5)*(1/x1+1/x2+1/x3+1/x4+1/x5)-z)*x1*x2*x3*x4*x5)
 FP2 = sympy.expand(x1**4 + x2**4 + x3**4 + x4**4 - (1 / z)*(x3**2*x4**2 + x1*x2*x3*x4))
 FP = sympy.expand(x1**4 + x2**4 + x3**4 + x4**4 - (1 / z)*x1*x2*x3*x4)
 CP2 = sympy.expand(x1**3 + x2**3 + x3**3 - (1 / z)*(x1**2 * x2 + x1*x2*x3))
 CP = sympy.expand(x1**3 + x2**3 + x3**3 - (1 / z)*x1*x2*x3)
+
+C0 = sympy.expand(x1*(x1-x3)*(x2-x3) + z*(x1-x2)*x2*x3)
+
+
 
 # We always consider homogeneous polynomials
 
@@ -154,7 +158,29 @@ def stupid_linear_sol_t(f, g):
 
 # gen_t_list(x1, x3 * LP, 2)
 # gb = MyGroebner.GroebnerBasis([x1**3, x2**3], [x1, x2], domain='QQ(z)', order='grlex')
-print(stupid_linear_sol_d(1, QP2))
+
+C3 = sympy.expand((x1**3+x2**3+x3**3)*z-3*x1*x2*x3)
+C6 = sympy.expand((x1+x2+x3)*(x1*x2+x2*x3+x3*x1) - z*x1*x2*x3)
+C2 = sympy.expand((x1+x2)*(x1*x2+x3*x3)-4*z*x1*x2*x3)
+C5 = sympy.expand((x1+x2)*(x1+x3)*(x1+x2+x3)+z*x1*x2*x3)
+C6b = sympy.expand((x1+x2+x3)*(x1*x2+x2*x3+x3*x3) - 8*z*x1*x2*x3)
+
+#res2 = stupid_linear_sol_d(1, C2)
+#res3 = stupid_linear_sol_d(1, C3)
+#res6 = stupid_linear_sol_d(1, C6)
+#res5 = stupid_linear_sol_d(1, C5)
+#res6b = stupid_linear_sol_d(1, C6b)
+
+p3 = PFTool.PFO("(d**2*z*(z**3 - 1) + d*(4*z**3 - 1) + 2*z**2)")
+p6 = PFTool.PFO("(d**2*z**3 - 10*d**2*z**2 + 9*d**2*z + 3*d*z**2 - 20*d*z + 9*d + z - 3)")
+p2 = PFTool.PFO("(d**2*z**3 - d**2*z + 3*d*z**2 - d + z)")
+p5 = PFTool.PFO("(d**2*z**3 + 11*d**2*z**2 - d**2*z + 3*d*z**2 + 22*d*z - d + z + 3)")
+p6b = PFTool.PFO("(8*d**2*z**3 - 7*d**2*z**2 - d**2*z + 24*d*z**2 - 14*d*z - d + 8*z - 2)")
+pwhat = PFTool.PFO(t*t-16*z*z*(t+1)*(t+1))
+#print(p3.all_sol(20)[0])
+#pa = PFTool.PFO("(d**2*z**3 - 10*d**2*z**2 + 9*d**2*z + 3*d*z**2 - 20*d*z + 9*d + z - 3)")
+#pb = PFTool.PFO("(d**2*z**5 - 28*d**2*z**4 + 134*d**2*z**3 + 100*d**2*z**2 - 63*d**2*z + 3*d*z**4 - 54*d*z**3 + 76*d*z**2 + 326*d*z - 63*d + z**3 - 7*z**2 - 33*z + 39)")
+
 # print(stupid_linear_sol_d(1, QP))
 # print(stupid_linear_sol_t(1, FP))
 # gen_t_list(1, FP2, 4)
