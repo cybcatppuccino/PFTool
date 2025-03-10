@@ -8,6 +8,7 @@ x2 = sympy.Symbol('x2')
 x3 = sympy.Symbol('x3')
 x4 = sympy.Symbol('x4')
 x5 = sympy.Symbol('x5')
+x6 = sympy.Symbol('x6')
 
 # the family variable
 z = sympy.Symbol('z')
@@ -52,9 +53,9 @@ class HP:
         self.eqn = sympy.expand(ineqn)
         self.varlist = []
         # self.auxvarlist = []
-        for num in range(5):
+        for num in range(6):
             if "x" + str(num + 1) in str(self.eqn):
-                self.varlist.append([x1, x2, x3, x4, x5][num])
+                self.varlist.append([x1, x2, x3, x4, x5, x6][num])
                 # self.auxvarlist.append([y1, y2, y3, y4, y5][num])
         
         print("Preparation done!")
@@ -166,6 +167,9 @@ C2 = sympy.expand((x1+x2)*(x1*x2+x3*x3)-16*z*x1*x2*x3)
 C5 = sympy.expand((x1+x2)*(x1+x3)*(x1+x2+x3)+z*x1*x2*x3)
 C6b = sympy.expand((x1+x2+x3)*(x1*x2+x2*x3+x3*x3) + 8*z*x1*x2*x3)
 C9 = sympy.expand(x1**3+x2*x3*(x2+x3)+(27*z-3)*x1*x2*x3)
+
+Ct = sympy.expand((x1*x1+1)*(x2*x2+1)*(x3*x3+1)-z)
+rest = stupid_linear_sol_d(1, Ct)
 
 #res2 = stupid_linear_sol_d(1, C2)
 #res3 = stupid_linear_sol_d(1, C3)
