@@ -1767,7 +1767,7 @@ flist = []
 for _ in fdict:
     if fdict[_][0] != None:
         flist.append((_,) + fdict[_])
-flist.sort(key=lambda x: x[2]*1000 + ord(x[3]))
+flist.sort(key=lambda x: x[2]*1000 + ord(x[3]) + (x[3]=="Z")*999999999)
 
 def makedict():
     soldict = dict()
@@ -1775,7 +1775,7 @@ def makedict():
     for n in range(len(flist)):
         print(n+1, "/", len(flist))
         glist = gen(sollist[n], (flist[n][0], n))
-        numdict[flist[n][0]] = len(glist)
+        numdict[flist[n][0]] = len(set(g[0] for g in glist))
         for g in glist:
             if g[0] not in soldict:
                 soldict[g[0]] = [g[1]]
@@ -1835,14 +1835,15 @@ soldict, numdict = loaddata()
 def search(lst,show=20):
     outdict = dict()
     glist = gen(lst, None)
-    for g in glist:
-        if g[0] in soldict:
-            for d in soldict[g[0]]:
+    gset = set(g[0] for g in glist)
+    for g in gset:
+        if g in soldict:
+            for d in soldict[g]:
                 if d[0] in outdict:
                     outdict[d[0]] += 1
                 else:
                     outdict[d[0]] = 1
-    l = len(glist)
+    l = len(gset)
     outlst = [(_, outdict[_], numdict[_]) for _ in outdict]
     outlst.sort(key=lambda x: ((l/x[2]+x[2]/l)**.5)*((x[1]/x[2]+x[2]/x[1])**.8)/(x[1]**1))
     return (l, outlst[:show])
@@ -1855,7 +1856,6 @@ if __name__ == '__main__':
             form = fdict[_][0]
             print(_ + " = " + str(form).replace('**','^') + ';')
     '''
-
 
 '''
 f1A = (1743552*z^2 - 480*z + 1)/(4*z^2*(732096*z^2 + 240*z - 1)^2);
