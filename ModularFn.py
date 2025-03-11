@@ -1856,6 +1856,11 @@ if __name__ == '__main__':
             form = fdict[_][0]
             print(_ + " = " + str(form).replace('**','^') + ';')
     '''
+    tc = 7
+    sq = I * tc**.5
+    print(search([1,9,-tc,(-2+sq)**2,(-2-sq)**2]))
+    sq = 17**.5
+    print(search([1,9,(4+sq)**2,(2+sq)**2,(-6-sq)**2]))
 
 '''
 f1A = (1743552*z^2 - 480*z + 1)/(4*z^2*(732096*z^2 + 240*z - 1)^2);
