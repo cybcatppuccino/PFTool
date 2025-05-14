@@ -690,6 +690,10 @@ AESZinfolist.append((551, '', '4.51', 'Sporadic Operator. There is a second MUM-
 (544, '10', '1.10', 'A-incarnation: X(4,4) in P^5(1,1,1,1,2,2)')
 '''
 
+pfo = AESZ(207).pfo
+pfo2 = pfo.translation(-sympy.Integer(1)/5832)
+
+'''
 if __name__ == '__main__':
     thelist = []
     for _ in AESZinfolist:
@@ -711,7 +715,7 @@ if __name__ == '__main__':
     print(a.pfo.translation_inf().localind)
     time1 = time()
     
-    '''
+    
     print(ap.all_sol(8))
     print(ap.qcoord(8))
     print(sympy.simplify(ap.primdform.coeff(d,3) / ap.primdform.coeff(d,4)))
@@ -723,10 +727,9 @@ if __name__ == '__main__':
     ps = sympy.fps(rst).truncate(8).removeO()
     
     print(ps)
-    '''
 
-    '''
     b = AESZ(175) # AESZ 34
     c = b.pfo.translation(sympy.Rational(-1, 7))
     print(c, c.all_sol(8))
-    '''
+
+'''

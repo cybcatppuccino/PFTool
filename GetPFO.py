@@ -169,7 +169,7 @@ C6b = sympy.expand((x1+x2+x3)*(x1*x2+x2*x3+x3*x3) + 8*z*x1*x2*x3)
 C9 = sympy.expand(x1**3+x2*x3*(x2+x3)+(27*z-3)*x1*x2*x3)
 
 Ct = sympy.expand((x1*x1+1)*(x2*x2+1)*(x3*x3+1)-z)
-rest = stupid_linear_sol_d(1, Ct)
+#rest = stupid_linear_sol_d(1, Ct)
 
 #res2 = stupid_linear_sol_d(1, C2)
 #res3 = stupid_linear_sol_d(1, C3)

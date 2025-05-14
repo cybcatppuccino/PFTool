@@ -1858,9 +1858,17 @@ if __name__ == '__main__':
     '''
     tc = 7
     sq = I * tc**.5
-    print(search([1,9,-tc,(-2+sq)**2,(-2-sq)**2]))
+    print("A",search([1,9,-tc,(-2+sq)**2,(-2-sq)**2]))
+    print("B",search([-tc,(-2+sq)**2,(-2-sq)**2]))
     sq = 17**.5
-    print(search([1,9,(4+sq)**2,(2+sq)**2,(-6-sq)**2]))
+    print("C",search([1,9,(4+sq)**2,(2+sq)**2,(-6-sq)**2]))
+    print("D",search([(4+sq)**2,(2+sq)**2,(-6-sq)**2]))
+    
+    sq = 5**1.5
+    print("E",search([0,(11+sq)/2,(11-sq)/2]))
+    print("F",search([0,-1,7/4,(11+sq)/2,(11-sq)/2,1/32],show=50))
+    
+    print("G",search([0,1,-8,9,-1/8,1/9,8/9,9/8],show=1100))
 
 '''
 f1A = (1743552*z^2 - 480*z + 1)/(4*z^2*(732096*z^2 + 240*z - 1)^2);

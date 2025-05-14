@@ -4,7 +4,7 @@ primes = [2,3,5,7,11,13,17,19,23,29,31,37,41,43,47,53,59,61,67,71,73,79,83,89,97
 
 @njit
 def count_points(p):
-    k=3
+    k=-1
     count = 0
     for a in range(1, p):
         for b in range(a+1, p):
